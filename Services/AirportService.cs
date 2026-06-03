@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.SignalR;
+using Samoloty.Hubs;
 using Samoloty.Models;
 
 namespace Samoloty.Services;
@@ -6,6 +8,7 @@ public class AirportService
 {
     private readonly object _lock = new();
     private readonly Random _random = new();
+    private readonly IHubContext<AirportHub> _hubContext;
 
     private List<Airplane> _airplanes = new();
     private List<string> _logs = new();
@@ -21,6 +24,11 @@ public class AirportService
 
     private const int RunwayCount = 2;
     private const int GateCount = 3;
+
+    public AirportService(IHubContext<AirportHub> hubContext)
+    {
+        _hubContext = hubContext;
+    }
 
     public AirportState GetState()
     {
@@ -74,6 +82,7 @@ public class AirportService
             if (_isRunning)
             {
                 AddLog("Simulation is already running");
+                SendState();
                 return;
             }
 
@@ -83,6 +92,7 @@ public class AirportService
             AddLog("Simulation started");
         }
 
+        SendState();
         Task.Run(() => GeneratePlanes(currentSimulationId, _cancellation.Token));
     }
 
@@ -93,6 +103,7 @@ public class AirportService
             if (!_isRunning)
             {
                 AddLog("Simulation is already stopped");
+                SendState();
                 return;
             }
 
@@ -101,6 +112,8 @@ public class AirportService
             _cancellation.Cancel();
             AddLog("Simulation stopped");
         }
+
+        SendState();
     }
 
     public void ResetSimulation()
@@ -120,6 +133,8 @@ public class AirportService
             _servedPlanes = 0;
             AddLog("Simulation reset");
         }
+
+        SendState();
     }
 
     public void AddPlane()
@@ -132,6 +147,7 @@ public class AirportService
             if (!_isRunning)
             {
                 AddLog("Cannot add plane because simulation is stopped");
+                SendState();
                 return;
             }
 
@@ -141,6 +157,7 @@ public class AirportService
 
         var plane = CreatePlane();
 
+        SendState();
         Task.Run(() => ProcessPlane(plane.Id, currentSimulationId, token));
     }
 
@@ -198,6 +215,7 @@ public class AirportService
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "WaitingForRunway", null, null);
             AddPlaneLog(planeId, "is waiting for runway");
+            SendState();
 
             await _runwaySemaphore.WaitAsync(token);
             landingRunwayTaken = true;
@@ -206,6 +224,7 @@ public class AirportService
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "Landing", landingRunway, null);
             AddPlaneLog(planeId, $"got runway {landingRunway} and is landing");
+            SendState();
 
             await DelayRandom(3000, 5000, token);
 
@@ -216,18 +235,21 @@ public class AirportService
             var gate = TakeGate();
             UpdatePlane(planeId, "TaxiingToGate", null, gate);
             AddPlaneLog(planeId, $"is taxiing to gate {gate}");
+            SendState();
 
             await DelayRandom(2000, 3500, token);
 
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "AtGate", null, gate);
             AddPlaneLog(planeId, $"reached gate {gate}");
+            SendState();
 
             await DelayRandom(4000, 7000, token);
 
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "PreparingDeparture", null, gate);
             AddPlaneLog(planeId, "is preparing for departure");
+            SendState();
 
             await DelayRandom(2000, 4000, token);
 
@@ -238,6 +260,7 @@ public class AirportService
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "TakingOff", takeoffRunway, gate);
             AddPlaneLog(planeId, $"got runway {takeoffRunway} and is taking off");
+            SendState();
 
             await DelayRandom(3000, 5000, token);
 
@@ -252,10 +275,13 @@ public class AirportService
             {
                 _servedPlanes++;
             }
+
+            SendState();
         }
         catch
         {
             UpdatePlane(planeId, "Cancelled", null, null);
+            SendState();
         }
         finally
         {
@@ -268,6 +294,8 @@ public class AirportService
             {
                 ReleaseRunway(takeoffRunway);
             }
+
+            SendState();
         }
     }
 
@@ -398,5 +426,11 @@ public class AirportService
         {
             _logs.RemoveAt(_logs.Count - 1);
         }
+    }
+
+    private void SendState()
+    {
+        var state = GetState();
+        _ = _hubContext.Clients.All.SendAsync("ReceiveAirportState", state);
     }
 }

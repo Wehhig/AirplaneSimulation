@@ -1,27 +1,48 @@
+let connection = new signalR.HubConnectionBuilder()
+    .withUrl("/airportHub")
+    .withAutomaticReconnect()
+    .build();
+
+connection.on("ReceiveAirportState", function (state) {
+    renderState(state);
+});
+
+connection.start().then(function () {
+    loadState();
+});
+
 async function startSimulation() {
-    await fetch("/Airport/Start", { method: "POST" });
-    await loadState();
+    const state = await sendPost("/Airport/Start");
+    renderState(state);
 }
 
 async function stopSimulation() {
-    await fetch("/Airport/Stop", { method: "POST" });
-    await loadState();
+    const state = await sendPost("/Airport/Stop");
+    renderState(state);
 }
 
 async function resetSimulation() {
-    await fetch("/Airport/Reset", { method: "POST" });
-    await loadState();
+    const state = await sendPost("/Airport/Reset");
+    renderState(state);
 }
 
 async function addPlane() {
-    await fetch("/Airport/AddPlane", { method: "POST" });
-    await loadState();
+    const state = await sendPost("/Airport/AddPlane");
+    renderState(state);
+}
+
+async function sendPost(url) {
+    const response = await fetch(url, { method: "POST" });
+    return await response.json();
 }
 
 async function loadState() {
     const response = await fetch("/Airport/State");
     const state = await response.json();
+    renderState(state);
+}
 
+function renderState(state) {
     renderStats(state.stats);
     renderPlanes(state.airplanes);
     renderLogs(state.logs);
@@ -71,6 +92,3 @@ function valueOrDash(value) {
 
     return value;
 }
-
-setInterval(loadState, 1000);
-loadState();

@@ -1,8 +1,10 @@
+using Samoloty.Hubs;
 using Samoloty.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 builder.Services.AddSingleton<AirportService>();
 
 var app = builder.Build();
@@ -19,6 +21,8 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+app.MapHub<AirportHub>("/airportHub");
 
 app.MapControllerRoute(
     name: "default",
