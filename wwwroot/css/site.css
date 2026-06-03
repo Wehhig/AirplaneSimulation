@@ -29,3 +29,124 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+.airport-page {
+    padding: 24px;
+}
+
+.airport-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.airport-header h1 {
+    margin: 0;
+}
+
+.airport-header p {
+    margin: 4px 0 0 0;
+    color: #666;
+}
+
+.airport-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.airport-buttons button {
+    padding: 10px 16px;
+    border: 1px solid #222;
+    background: white;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.airport-buttons button:hover {
+    background: #222;
+    color: white;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 16px;
+    background: white;
+}
+
+.stat-card span {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.stat-card strong {
+    font-size: 22px;
+}
+
+.airport-layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+}
+
+.panel {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background: white;
+    padding: 18px;
+}
+
+.panel h2 {
+    margin-top: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    padding: 10px;
+}
+
+.event-log {
+    height: 360px;
+    overflow: auto;
+    font-family: Consolas, monospace;
+    font-size: 14px;
+}
+
+.event-log div {
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+}
+
+@media (max-width: 900px) {
+    .airport-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .airport-layout {
+        grid-template-columns: 1fr;
+    }
+}

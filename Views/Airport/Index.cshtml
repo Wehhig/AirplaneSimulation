@@ -1,0 +1,70 @@
+@{
+    ViewData["Title"] = "Airport Control Simulator";
+}
+
+<div class="airport-page">
+    <div class="airport-header">
+        <div>
+            <h1>Airport Control Simulator</h1>
+            <p>Backend simulation preview</p>
+        </div>
+
+        <div class="airport-buttons">
+            <button onclick="startSimulation()">Start</button>
+            <button onclick="stopSimulation()">Stop</button>
+            <button onclick="resetSimulation()">Reset</button>
+            <button onclick="addPlane()">Add Plane</button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span>Running</span>
+            <strong id="stat-running">-</strong>
+        </div>
+        <div class="stat-card">
+            <span>Runways</span>
+            <strong id="stat-runways">-</strong>
+        </div>
+        <div class="stat-card">
+            <span>Waiting</span>
+            <strong id="stat-waiting">-</strong>
+        </div>
+        <div class="stat-card">
+            <span>Landing</span>
+            <strong id="stat-landing">-</strong>
+        </div>
+        <div class="stat-card">
+            <span>At gate</span>
+            <strong id="stat-gate">-</strong>
+        </div>
+        <div class="stat-card">
+            <span>Served</span>
+            <strong id="stat-served">-</strong>
+        </div>
+    </div>
+
+    <div class="airport-layout">
+        <div class="panel">
+            <h2>Planes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Flight</th>
+                        <th>Status</th>
+                        <th>Runway</th>
+                        <th>Gate</th>
+                    </tr>
+                </thead>
+                <tbody id="planes-table"></tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Event log</h2>
+            <div id="event-log" class="event-log"></div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/airport.js" asp-append-version="true"></script>
