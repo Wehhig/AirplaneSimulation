@@ -6,7 +6,7 @@
     <div class="airport-header">
         <div>
             <h1>Airport Control Simulator</h1>
-            <p>Backend simulation preview with SignalR live updates</p>
+            <p>Live airport simulation with SignalR updates</p>
         </div>
 
         <div class="airport-buttons">
@@ -15,6 +15,11 @@
             <button onclick="resetSimulation()">Reset</button>
             <button onclick="addPlane()">Add Plane</button>
         </div>
+    </div>
+
+    <div class="tabs">
+        <button id="tab-simulation" class="tab-button active" onclick="showTab('simulation')">Simulation</button>
+        <button id="tab-admin" class="tab-button" onclick="showTab('admin')">Admin / Data</button>
     </div>
 
     <div class="stats-grid">
@@ -27,6 +32,10 @@
             <strong id="stat-runways">-</strong>
         </div>
         <div class="stat-card">
+            <span>In air</span>
+            <strong id="stat-in-air">-</strong>
+        </div>
+        <div class="stat-card">
             <span>Waiting</span>
             <strong id="stat-waiting">-</strong>
         </div>
@@ -35,34 +44,83 @@
             <strong id="stat-landing">-</strong>
         </div>
         <div class="stat-card">
-            <span>At gate</span>
-            <strong id="stat-gate">-</strong>
-        </div>
-        <div class="stat-card">
             <span>Served</span>
             <strong id="stat-served">-</strong>
         </div>
     </div>
 
-    <div class="airport-layout">
-        <div class="panel">
-            <h2>Planes</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Flight</th>
-                        <th>Status</th>
-                        <th>Runway</th>
-                        <th>Gate</th>
-                    </tr>
-                </thead>
-                <tbody id="planes-table"></tbody>
-            </table>
-        </div>
+    <div id="view-simulation" class="tab-view active">
+        <div class="simulation-grid">
+            <div class="panel airport-map-panel">
+                <div class="panel-title-row">
+                    <h2>Airport live view</h2>
+                    <span id="airport-status" class="airport-status">Waiting</span>
+                </div>
 
-        <div class="panel">
-            <h2>Event log</h2>
-            <div id="event-log" class="event-log"></div>
+                <div class="airport-map">
+                    <svg class="airport-svg" viewBox="0 0 1000 420" preserveAspectRatio="none">
+                        <ellipse cx="300" cy="95" rx="185" ry="58" class="path-line" />
+                        <path d="M485 95 C620 110 740 135 830 185" class="path-line" />
+                        <path d="M275 155 C340 190 390 205 455 205" class="path-line" />
+                        <rect x="250" y="185" width="560" height="55" rx="4" class="runway" />
+                        <line x1="275" y1="212" x2="785" y2="212" class="runway-line" />
+                        <text x="820" y="205" class="map-text">RUNWAY 1</text>
+                        <text x="820" y="230" class="map-text">RUNWAY 2</text>
+                        <path d="M420 240 L420 285 L365 325" class="taxi-line" />
+                        <path d="M530 240 L530 285 L505 325" class="taxi-line" />
+                        <path d="M640 240 L640 285 L645 325" class="taxi-line" />
+                        <rect x="295" y="330" width="420" height="55" rx="8" class="terminal" />
+                        <rect x="335" y="290" width="75" height="40" rx="4" class="gate" />
+                        <rect x="475" y="290" width="75" height="40" rx="4" class="gate" />
+                        <rect x="615" y="290" width="75" height="40" rx="4" class="gate" />
+                        <text x="445" y="362" class="terminal-text">TERMINAL</text>
+                        <text x="350" y="315" class="gate-text">GATE 1</text>
+                        <text x="490" y="315" class="gate-text">GATE 2</text>
+                        <text x="630" y="315" class="gate-text">GATE 3</text>
+                        <text x="240" y="98" class="map-text">HOLDING AREA</text>
+                    </svg>
+
+                    <div id="plane-layer" class="plane-layer"></div>
+                </div>
+            </div>
+
+            <div class="panel side-panel">
+                <h2>Current state</h2>
+                <div class="state-list">
+                    <div><span>Active planes</span><strong id="side-active">-</strong></div>
+                    <div><span>At gate</span><strong id="side-gate">-</strong></div>
+                    <div><span>Taking off</span><strong id="side-taking-off">-</strong></div>
+                    <div><span>Departed</span><strong id="side-departed">-</strong></div>
+                </div>
+
+                <h2>Recent events</h2>
+                <div id="short-event-log" class="short-event-log"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-admin" class="tab-view">
+        <div class="admin-grid">
+            <div class="panel">
+                <h2>Planes</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Flight</th>
+                            <th>Status</th>
+                            <th>Runway</th>
+                            <th>Gate</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="planes-table"></tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <h2>Event log</h2>
+                <div id="event-log" class="event-log"></div>
+            </div>
         </div>
     </div>
 </div>

@@ -1,37 +1,26 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    html {
+        font-size: 16px;
+    }
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
-}
-
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
-}
-
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+    margin-bottom: 60px;
+    background: #f7f7f7;
+    color: #111;
 }
 
 .airport-page {
-    padding: 24px;
+    padding: 28px 0;
 }
 
 .airport-header {
@@ -39,11 +28,13 @@ body {
     justify-content: space-between;
     gap: 24px;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 
 .airport-header h1 {
     margin: 0;
+    font-size: 40px;
+    letter-spacing: -1px;
 }
 
 .airport-header p {
@@ -57,7 +48,8 @@ body {
     flex-wrap: wrap;
 }
 
-.airport-buttons button {
+.airport-buttons button,
+.tab-button {
     padding: 10px 16px;
     border: 1px solid #222;
     background: white;
@@ -65,9 +57,25 @@ body {
     border-radius: 8px;
 }
 
-.airport-buttons button:hover {
+.airport-buttons button:hover,
+.tab-button:hover,
+.tab-button.active {
     background: #222;
     color: white;
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.tab-view {
+    display: none;
+}
+
+.tab-view.active {
+    display: block;
 }
 
 .stats-grid {
@@ -95,7 +103,13 @@ body {
     font-size: 22px;
 }
 
-.airport-layout {
+.simulation-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 0.8fr;
+    gap: 20px;
+}
+
+.admin-grid {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
     gap: 20px;
@@ -112,6 +126,204 @@ body {
     margin-top: 0;
 }
 
+.panel-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.panel-title-row h2 {
+    margin: 0;
+}
+
+.airport-status {
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 13px;
+    border: 1px solid #ddd;
+}
+
+.airport-status.running {
+    background: #eaf8ed;
+    border-color: #b8dfc0;
+}
+
+.airport-status.busy {
+    background: #fff3d9;
+    border-color: #e7ca84;
+}
+
+.airport-status.stopped {
+    background: #f1f1f1;
+    border-color: #ddd;
+}
+
+.airport-map {
+    position: relative;
+    height: 440px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fbfbfb;
+}
+
+.airport-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.path-line {
+    fill: none;
+    stroke: #999;
+    stroke-width: 2;
+    stroke-dasharray: 10 8;
+}
+
+.taxi-line {
+    fill: none;
+    stroke: #777;
+    stroke-width: 3;
+    stroke-dasharray: 7 5;
+}
+
+.runway {
+    fill: #222;
+}
+
+.runway-line {
+    stroke: white;
+    stroke-width: 2;
+    stroke-dasharray: 14 12;
+}
+
+.terminal {
+    fill: #f0f0f0;
+    stroke: #222;
+    stroke-width: 2;
+}
+
+.gate {
+    fill: white;
+    stroke: #222;
+    stroke-width: 2;
+}
+
+.map-text,
+.gate-text,
+.terminal-text {
+    fill: #111;
+    font-size: 18px;
+    font-family: Arial, sans-serif;
+}
+
+.gate-text {
+    font-size: 14px;
+}
+
+.terminal-text {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.plane-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.plane {
+    position: absolute;
+    z-index: 5;
+    font-size: 32px;
+    line-height: 1;
+    transition: left 1.4s ease, top 1.4s ease, transform 1.4s ease;
+    color: #111;
+    text-align: center;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
+}
+
+.plane span {
+    display: block;
+    font-size: 10px;
+    margin-top: 3px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    padding: 2px 6px;
+    transform: rotate(0deg);
+}
+
+.plane-flying,
+.plane-waiting {
+    animation: planeFloat 1.5s ease-in-out infinite alternate;
+}
+
+.plane-landing,
+.plane-taking-off {
+    color: #000;
+}
+
+.plane-gate,
+.plane-preparing {
+    opacity: 0.9;
+}
+
+@keyframes planeFloat {
+    from {
+        margin-top: -4px;
+    }
+
+    to {
+        margin-top: 4px;
+    }
+}
+
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.state-list {
+    display: grid;
+    gap: 10px;
+}
+
+.state-list div {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+}
+
+.state-list span {
+    color: #666;
+}
+
+.short-event-log,
+.event-log {
+    overflow: auto;
+    font-family: Consolas, monospace;
+    font-size: 14px;
+}
+
+.short-event-log {
+    height: 245px;
+}
+
+.event-log {
+    height: 430px;
+}
+
+.short-event-log div,
+.event-log div {
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -124,19 +336,58 @@ td {
     padding: 10px;
 }
 
-.event-log {
-    height: 360px;
-    overflow: auto;
-    font-family: Consolas, monospace;
-    font-size: 14px;
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-size: 13px;
+    border: 1px solid #ddd;
+    background: #f5f5f5;
 }
 
-.event-log div {
-    padding: 6px 0;
-    border-bottom: 1px solid #eee;
+.status-blue {
+    background: #e8f1ff;
+    border-color: #bdd4f5;
 }
 
-@media (max-width: 900px) {
+.status-yellow {
+    background: #fff6d8;
+    border-color: #ead48f;
+}
+
+.status-orange {
+    background: #ffefdf;
+    border-color: #efc09a;
+}
+
+.status-gray {
+    background: #f3f3f3;
+    border-color: #d2d2d2;
+}
+
+.status-green {
+    background: #e7f7ed;
+    border-color: #b7dfc4;
+}
+
+.status-purple {
+    background: #f1eaff;
+    border-color: #d2c1f2;
+}
+
+.status-red {
+    background: #ffe5e5;
+    border-color: #ebb3b3;
+}
+
+.status-dark {
+    background: #222;
+    border-color: #222;
+    color: white;
+}
+
+@media (max-width: 1000px) {
     .airport-header {
         flex-direction: column;
         align-items: flex-start;
@@ -146,7 +397,8 @@ td {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .airport-layout {
+    .simulation-grid,
+    .admin-grid {
         grid-template-columns: 1fr;
     }
 }
