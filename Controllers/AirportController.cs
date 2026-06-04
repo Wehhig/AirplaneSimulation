@@ -50,4 +50,25 @@ public class AirportController : Controller
         _airportService.AddPlane();
         return Json(_airportService.GetState());
     }
+
+    [HttpPost]
+    public IActionResult SetSpeed(string speed)
+    {
+        _airportService.SetSpeed(speed);
+        return Json(_airportService.GetState());
+    }
+
+    [HttpPost]
+    public IActionResult SetAutoMode(bool enabled)
+    {
+        _airportService.SetAutoMode(enabled);
+        return Json(_airportService.GetState());
+    }
+
+    [HttpPost]
+    public IActionResult ClearDeparted()
+    {
+        _airportService.ClearDeparted();
+        return Json(_airportService.GetState());
+    }
 }

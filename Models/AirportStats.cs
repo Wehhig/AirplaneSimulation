@@ -3,6 +3,9 @@ namespace Samoloty.Models;
 public class AirportStats
 {
     public bool IsRunning { get; set; }
+    public bool AutoMode { get; set; }
+    public string SpeedMode { get; set; } = "Normal";
+    public string AirportLoad { get; set; } = "Idle";
     public int RunwayCount { get; set; }
     public int AvailableRunways { get; set; }
     public int BusyRunways { get; set; }

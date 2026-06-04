@@ -17,6 +17,8 @@ public class AirportService
     private CancellationTokenSource _cancellation = new();
 
     private bool _isRunning;
+    private bool _autoMode = true;
+    private string _speedMode = "Normal";
     private int _nextId = 1;
     private int _nextGate = 1;
     private int _servedPlanes;
@@ -47,19 +49,27 @@ public class AirportService
                 })
                 .ToList();
 
+            var activePlanes = _airplanes.Count(p => p.Status != "Departed" && p.Status != "Cancelled");
+            var waiting = _airplanes.Count(p => p.Status == "WaitingForRunway");
+            var landing = _airplanes.Count(p => p.Status == "Landing");
+            var takingOff = _airplanes.Count(p => p.Status == "TakingOff");
+
             var stats = new AirportStats
             {
                 IsRunning = _isRunning,
+                AutoMode = _autoMode,
+                SpeedMode = _speedMode,
+                AirportLoad = GetAirportLoad(activePlanes, waiting, landing, takingOff),
                 RunwayCount = RunwayCount,
                 AvailableRunways = _runwaySemaphore.CurrentCount,
                 BusyRunways = RunwayCount - _runwaySemaphore.CurrentCount,
                 TotalPlanes = _airplanes.Count,
-                ActivePlanes = _airplanes.Count(p => p.Status != "Departed" && p.Status != "Cancelled"),
+                ActivePlanes = activePlanes,
                 InAir = _airplanes.Count(p => p.Status == "Flying"),
-                Waiting = _airplanes.Count(p => p.Status == "WaitingForRunway"),
-                Landing = _airplanes.Count(p => p.Status == "Landing"),
+                Waiting = waiting,
+                Landing = landing,
                 AtGate = _airplanes.Count(p => p.Status == "AtGate" || p.Status == "PreparingDeparture"),
-                TakingOff = _airplanes.Count(p => p.Status == "TakingOff"),
+                TakingOff = takingOff,
                 Departed = _airplanes.Count(p => p.Status == "Departed"),
                 ServedPlanes = _servedPlanes
             };
@@ -161,15 +171,67 @@ public class AirportService
         Task.Run(() => ProcessPlane(plane.Id, currentSimulationId, token));
     }
 
+    public void SetSpeed(string speed)
+    {
+        lock (_lock)
+        {
+            if (speed != "Slow" && speed != "Normal" && speed != "Fast")
+            {
+                return;
+            }
+
+            _speedMode = speed;
+            AddLog($"Simulation speed changed to {speed}");
+        }
+
+        SendState();
+    }
+
+    public void SetAutoMode(bool enabled)
+    {
+        lock (_lock)
+        {
+            _autoMode = enabled;
+
+            if (enabled)
+            {
+                AddLog("Auto mode enabled");
+            }
+            else
+            {
+                AddLog("Auto mode disabled");
+            }
+        }
+
+        SendState();
+    }
+
+    public void ClearDeparted()
+    {
+        lock (_lock)
+        {
+            _airplanes = _airplanes
+                .Where(p => p.Status != "Departed" && p.Status != "Cancelled")
+                .ToList();
+
+            AddLog("Departed planes removed from table");
+        }
+
+        SendState();
+    }
+
     private async Task GeneratePlanes(int simulationId, CancellationToken token)
     {
         while (IsTaskActive(simulationId, token))
         {
-            AddPlane();
+            if (IsAutoModeEnabled())
+            {
+                AddPlane();
+            }
 
             try
             {
-                await Task.Delay(GetRandomNumber(9000, 15000), token);
+                await Task.Delay(ScaleTime(GetRandomNumber(9000, 15000)), token);
             }
             catch
             {
@@ -307,6 +369,14 @@ public class AirportService
         }
     }
 
+    private bool IsAutoModeEnabled()
+    {
+        lock (_lock)
+        {
+            return _autoMode;
+        }
+    }
+
     private void UpdatePlane(int id, string status, int? runway, int? gate)
     {
         lock (_lock)
@@ -399,7 +469,45 @@ public class AirportService
 
     private async Task DelayRandom(int min, int max, CancellationToken token)
     {
-        await Task.Delay(GetRandomNumber(min, max), token);
+        await Task.Delay(ScaleTime(GetRandomNumber(min, max)), token);
+    }
+
+    private int ScaleTime(int value)
+    {
+        lock (_lock)
+        {
+            if (_speedMode == "Slow")
+            {
+                return (int)(value * 1.6);
+            }
+
+            if (_speedMode == "Fast")
+            {
+                return (int)(value * 0.55);
+            }
+
+            return value;
+        }
+    }
+
+    private string GetAirportLoad(int activePlanes, int waiting, int landing, int takingOff)
+    {
+        if (!_isRunning)
+        {
+            return "Idle";
+        }
+
+        if (waiting >= 3 || activePlanes >= 8)
+        {
+            return "High";
+        }
+
+        if (landing + takingOff >= 2 || activePlanes >= 5)
+        {
+            return "Medium";
+        }
+
+        return "Low";
     }
 
     private void AddPlaneLog(int planeId, string message)

@@ -3,145 +3,196 @@
 }
 
 <div class="airport-page">
-    <div class="airport-top">
-        <div>
-            <h1>Airport Control Simulator</h1>
-            <p>Live airport simulation with SignalR updates</p>
-        </div>
+    <div class="control-shell">
+        <aside class="tower-panel">
+            <div class="tower-mark">
+                <span>ATC</span>
+            </div>
 
-        <div class="airport-buttons">
-            <button onclick="startSimulation()">Start</button>
-            <button onclick="stopSimulation()">Stop</button>
-            <button onclick="resetSimulation()">Reset</button>
-            <button onclick="addPlane()">Add Plane</button>
-        </div>
-    </div>
+            <div class="tower-title">
+                <h1>Airport Control Simulator</h1>
+                <p>Runway traffic control panel</p>
+            </div>
 
-    <div class="tabs">
-        <button id="simulation-tab" class="tab-button active" onclick="showTab('simulation')">Simulation</button>
-        <button id="admin-tab" class="tab-button" onclick="showTab('admin')">Admin / Data</button>
-    </div>
+            <div class="tabs">
+                <button id="simulation-tab" class="tab-button active" onclick="showTab('simulation')">Simulation</button>
+                <button id="admin-tab" class="tab-button" onclick="showTab('admin')">Admin / Data</button>
+            </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <span>Running</span>
-            <strong id="stat-running">-</strong>
-        </div>
-        <div class="stat-card">
-            <span>Runways</span>
-            <strong id="stat-runways">-</strong>
-        </div>
-        <div class="stat-card">
-            <span>In air</span>
-            <strong id="stat-air">-</strong>
-        </div>
-        <div class="stat-card">
-            <span>Waiting</span>
-            <strong id="stat-waiting">-</strong>
-        </div>
-        <div class="stat-card">
-            <span>Landing</span>
-            <strong id="stat-landing">-</strong>
-        </div>
-        <div class="stat-card">
-            <span>Served</span>
-            <strong id="stat-served">-</strong>
-        </div>
-    </div>
+            <div class="airport-buttons">
+                <button onclick="startSimulation()">Start</button>
+                <button onclick="stopSimulation()">Stop</button>
+                <button onclick="resetSimulation()">Reset</button>
+                <button onclick="addPlane()">Add Plane</button>
+                <button onclick="clearDeparted()">Clear Departed</button>
+            </div>
 
-    <div id="simulation-view" class="tab-content active">
-        <div class="simulation-grid">
-            <div class="panel">
-                <div class="panel-title-row">
-                    <h2>Airport live view</h2>
-                    <span id="airport-status-pill" class="status-pill">Idle</span>
-                </div>
-
-                <div class="airport-map">
-                    <svg class="airport-svg" viewBox="0 0 900 480" preserveAspectRatio="xMidYMid meet">
-                        <rect x="0" y="0" width="900" height="480" rx="14" class="map-bg" />
-                        <ellipse cx="270" cy="110" rx="170" ry="70" class="holding-line" />
-                        <text x="270" y="115" text-anchor="middle" class="map-text">HOLDING AREA</text>
-
-                        <path d="M 420 115 C 585 130 750 175 815 250" class="route-line" />
-                        <path d="M 260 178 C 330 220 395 245 455 260" class="route-line" />
-
-                        <rect x="220" y="235" width="500" height="66" rx="4" class="runway" />
-                        <line x1="245" y1="268" x2="695" y2="268" class="runway-center" />
-                        <text x="735" y="257" class="map-text">RUNWAY 1</text>
-                        <text x="735" y="288" class="map-text">RUNWAY 2</text>
-
-                        <path d="M 365 301 L 365 355" class="taxi-line" />
-                        <path d="M 465 301 L 465 355" class="taxi-line" />
-                        <path d="M 565 301 L 565 355" class="taxi-line" />
-                        <path d="M 365 330 L 465 330 L 565 330" class="taxi-line" />
-
-                        <rect x="300" y="355" width="70" height="45" rx="4" class="gate" />
-                        <rect x="430" y="355" width="70" height="45" rx="4" class="gate" />
-                        <rect x="560" y="355" width="70" height="45" rx="4" class="gate" />
-                        <text x="335" y="383" text-anchor="middle" class="map-text-small">GATE 1</text>
-                        <text x="465" y="383" text-anchor="middle" class="map-text-small">GATE 2</text>
-                        <text x="595" y="383" text-anchor="middle" class="map-text-small">GATE 3</text>
-
-                        <rect x="260" y="405" width="420" height="52" rx="6" class="terminal" />
-                        <text x="470" y="438" text-anchor="middle" class="terminal-text">TERMINAL</text>
-                    </svg>
-
-                    <div id="plane-layer" class="plane-layer"></div>
+            <div class="control-block">
+                <span>Speed</span>
+                <div class="speed-buttons">
+                    <button id="speed-Slow" onclick="setSpeed('Slow')">Slow</button>
+                    <button id="speed-Normal" onclick="setSpeed('Normal')">Normal</button>
+                    <button id="speed-Fast" onclick="setSpeed('Fast')">Fast</button>
                 </div>
             </div>
 
-            <div class="panel">
-                <h2>Current state</h2>
+            <div class="control-block">
+                <span>Auto mode</span>
+                <button id="auto-mode-button" class="wide-control" onclick="toggleAutoMode()">-</button>
+            </div>
 
-                <div class="state-list">
-                    <div>
-                        <span>Active planes</span>
-                        <strong id="state-active">0</strong>
+            <div class="tower-note">
+                <span>SignalR</span>
+                <strong>live data stream</strong>
+            </div>
+        </aside>
+
+        <main class="airport-main">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>Running</span>
+                    <strong id="stat-running">-</strong>
+                </div>
+                <div class="stat-card">
+                    <span>Runways</span>
+                    <strong id="stat-runways">-</strong>
+                </div>
+                <div class="stat-card">
+                    <span>In air</span>
+                    <strong id="stat-air">-</strong>
+                </div>
+                <div class="stat-card">
+                    <span>Waiting</span>
+                    <strong id="stat-waiting">-</strong>
+                </div>
+                <div class="stat-card">
+                    <span>Load</span>
+                    <strong id="stat-load">-</strong>
+                </div>
+                <div class="stat-card">
+                    <span>Served</span>
+                    <strong id="stat-served">-</strong>
+                </div>
+            </div>
+
+            <div id="simulation-view" class="tab-content active">
+                <div class="simulation-grid">
+                    <div class="panel map-panel">
+                        <div class="panel-title-row">
+                            <div>
+                                <span class="section-kicker">Live view</span>
+                                <h2>Airport map</h2>
+                            </div>
+                            <span id="airport-status-pill" class="status-pill">Idle</span>
+                        </div>
+
+                        <div class="airport-map">
+                            <svg class="airport-svg" viewBox="0 0 900 480" preserveAspectRatio="xMidYMid meet">
+                                <rect x="0" y="0" width="900" height="480" class="map-bg" />
+                                <ellipse cx="270" cy="110" rx="170" ry="70" class="holding-line" />
+                                <text x="270" y="115" text-anchor="middle" class="map-text">HOLDING AREA</text>
+
+                                <path d="M 420 115 C 585 130 750 175 815 250" class="route-line" />
+                                <path d="M 260 178 C 330 220 395 245 455 260" class="route-line" />
+
+                                <rect x="220" y="235" width="500" height="66" class="runway" />
+                                <line x1="245" y1="268" x2="695" y2="268" class="runway-center" />
+                                <text x="735" y="257" class="map-text">RUNWAY 1</text>
+                                <text x="735" y="288" class="map-text">RUNWAY 2</text>
+
+                                <path d="M 365 301 L 365 355" class="taxi-line" />
+                                <path d="M 465 301 L 465 355" class="taxi-line" />
+                                <path d="M 565 301 L 565 355" class="taxi-line" />
+                                <path d="M 365 330 L 465 330 L 565 330" class="taxi-line" />
+
+                                <rect x="300" y="355" width="70" height="45" class="gate" />
+                                <rect x="430" y="355" width="70" height="45" class="gate" />
+                                <rect x="560" y="355" width="70" height="45" class="gate" />
+                                <text x="335" y="383" text-anchor="middle" class="map-text-small">GATE 1</text>
+                                <text x="465" y="383" text-anchor="middle" class="map-text-small">GATE 2</text>
+                                <text x="595" y="383" text-anchor="middle" class="map-text-small">GATE 3</text>
+
+                                <rect x="260" y="405" width="420" height="52" class="terminal" />
+                                <text x="470" y="438" text-anchor="middle" class="terminal-text">TERMINAL</text>
+                            </svg>
+
+                            <div id="plane-layer" class="plane-layer"></div>
+                        </div>
                     </div>
-                    <div>
-                        <span>At gate</span>
-                        <strong id="state-gate">0</strong>
-                    </div>
-                    <div>
-                        <span>Taking off</span>
-                        <strong id="state-takingoff">0</strong>
-                    </div>
-                    <div>
-                        <span>Departed</span>
-                        <strong id="state-departed">0</strong>
+
+                    <div class="panel state-panel">
+                        <span class="section-kicker">Operational state</span>
+                        <h2>Current state</h2>
+
+                        <div class="state-list">
+                            <div>
+                                <span>Active planes</span>
+                                <strong id="state-active">0</strong>
+                            </div>
+                            <div>
+                                <span>At gate</span>
+                                <strong id="state-gate">0</strong>
+                            </div>
+                            <div>
+                                <span>Taking off</span>
+                                <strong id="state-takingoff">0</strong>
+                            </div>
+                            <div>
+                                <span>Departed</span>
+                                <strong id="state-departed">0</strong>
+                            </div>
+                            <div>
+                                <span>Auto mode</span>
+                                <strong id="state-auto">-</strong>
+                            </div>
+                            <div>
+                                <span>Speed</span>
+                                <strong id="state-speed">-</strong>
+                            </div>
+                        </div>
+
+                        <span class="section-kicker">Last messages</span>
+                        <h2>Recent events</h2>
+                        <div id="recent-log" class="event-log small-log"></div>
                     </div>
                 </div>
-
-                <h2>Recent events</h2>
-                <div id="recent-log" class="event-log small-log"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-view" class="tab-content">
-        <div class="airport-layout">
-            <div class="panel">
-                <h2>Planes</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Flight</th>
-                            <th>Status</th>
-                            <th>Runway</th>
-                            <th>Gate</th>
-                            <th>Updated</th>
-                        </tr>
-                    </thead>
-                    <tbody id="planes-table"></tbody>
-                </table>
             </div>
 
-            <div class="panel">
-                <h2>Event log</h2>
-                <div id="event-log" class="event-log"></div>
+            <div id="admin-view" class="tab-content">
+                <div class="admin-stack">
+                    <div class="panel">
+                        <span class="section-kicker">Landing queue</span>
+                        <h2>Waiting for runway</h2>
+                        <div id="landing-queue" class="queue-list"></div>
+                    </div>
+
+                    <div class="airport-layout">
+                        <div class="panel">
+                            <span class="section-kicker">Aircraft registry</span>
+                            <h2>Planes</h2>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Flight</th>
+                                        <th>Status</th>
+                                        <th>Runway</th>
+                                        <th>Gate</th>
+                                        <th>Updated</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="planes-table"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="panel">
+                            <span class="section-kicker">System messages</span>
+                            <h2>Event log</h2>
+                            <div id="event-log" class="event-log"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 </div>
 

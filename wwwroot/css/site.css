@@ -2,9 +2,14 @@ html {
     font-size: 14px;
 }
 
+.app-root {
+    width: min(1500px, calc(100% - 32px));
+    margin: 0 auto;
+}
+
 body {
     margin: 0;
-    background: #f7f7f7;
+    background: #e9e7e1;
     color: #151515;
 }
 
@@ -13,82 +18,180 @@ button {
 }
 
 .airport-page {
-    padding: 28px 0 40px 0;
+    padding: 22px 0 34px 0;
 }
 
-.airport-top {
+.control-shell {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 18px;
+    align-items: start;
+}
+
+.tower-panel {
+    position: sticky;
+    top: 18px;
+    min-height: calc(100vh - 88px);
+    border: 2px solid #161616;
+    background: #f3f1ea;
+    padding: 18px;
     display: flex;
-    justify-content: space-between;
-    gap: 24px;
-    align-items: flex-start;
-    margin-bottom: 18px;
+    flex-direction: column;
+    gap: 18px;
 }
 
-.airport-top h1 {
+.tower-mark {
+    width: 72px;
+    height: 72px;
+    border: 2px solid #161616;
+    display: grid;
+    place-items: center;
+    background: #161616;
+    color: #f3f1ea;
+    letter-spacing: 3px;
+    font-weight: 800;
+    font-size: 20px;
+}
+
+.tower-title h1 {
     margin: 0;
-    font-size: 38px;
-    font-weight: 500;
+    font-size: 27px;
+    line-height: 1.05;
+    font-weight: 750;
+    letter-spacing: -1px;
 }
 
-.airport-top p {
-    margin: 6px 0 0 0;
-    color: #555;
-    font-size: 16px;
-}
-
-.airport-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding-top: 8px;
-}
-
-.airport-buttons button,
-.tab-button {
-    padding: 11px 18px;
-    border: 1px solid #222;
-    background: white;
-    cursor: pointer;
-    border-radius: 7px;
-    transition: 0.2s;
-}
-
-.airport-buttons button:hover,
-.tab-button:hover,
-.tab-button.active {
-    background: #1f1f1f;
-    color: white;
+.tower-title p {
+    margin: 10px 0 0 0;
+    color: #4c4c4c;
+    line-height: 1.4;
 }
 
 .tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    display: grid;
+    gap: 8px;
+}
+
+.tab-button {
+    width: 100%;
+    text-align: left;
+    padding: 12px 13px;
+    border: 2px solid #161616;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.tab-button:hover,
+.tab-button.active {
+    background: #161616;
+    color: #f3f1ea;
+}
+
+.airport-buttons {
+    display: grid;
+    gap: 8px;
+}
+
+.airport-buttons button,
+.wide-control,
+.speed-buttons button {
+    padding: 12px 13px;
+    border: 2px solid #161616;
+    background: #fdfbf3;
+    cursor: pointer;
+    border-radius: 0;
+    text-align: left;
+    font-weight: 700;
+    box-shadow: 4px 4px 0 #161616;
+    transition: 0.12s;
+}
+
+.airport-buttons button:hover,
+.wide-control:hover,
+.speed-buttons button:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #161616;
+    background: #f4c430;
+}
+
+.control-block {
+    border-top: 2px solid #161616;
+    padding-top: 14px;
+    display: grid;
+    gap: 9px;
+}
+
+.control-block span {
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #4f4f4f;
+}
+
+.speed-buttons {
+    display: grid;
+    gap: 7px;
+}
+
+.active-control {
+    background: #f4c430 !important;
+}
+
+.tower-note {
+    margin-top: auto;
+    border-top: 2px solid #161616;
+    padding-top: 14px;
+    display: grid;
+    gap: 4px;
+}
+
+.tower-note span {
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #666;
+}
+
+.tower-note strong {
+    font-size: 14px;
+}
+
+.airport-main {
+    min-width: 0;
 }
 
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 10px;
+    margin-bottom: 16px;
 }
 
 .stat-card {
-    border: 1px solid #e4e4e4;
-    border-radius: 10px;
-    padding: 18px;
-    background: white;
+    border: 2px solid #161616;
+    background: #fdfbf3;
+    padding: 13px 14px;
+    min-height: 88px;
 }
 
 .stat-card span {
     display: block;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 8px;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    color: #4f4f4f;
+    margin-bottom: 9px;
+    text-transform: uppercase;
 }
 
 .stat-card strong {
-    font-size: 24px;
+    font-size: 25px;
+    font-weight: 800;
 }
 
 .tab-content {
@@ -101,56 +204,70 @@ button {
 
 .simulation-grid {
     display: grid;
-    grid-template-columns: 2fr 0.95fr;
-    gap: 20px;
+    grid-template-columns: 2fr 0.88fr;
+    gap: 16px;
 }
 
 .airport-layout {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 20px;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 16px;
+}
+
+.admin-stack {
+    display: grid;
+    gap: 16px;
 }
 
 .panel {
-    border: 1px solid #e2e2e2;
-    border-radius: 12px;
-    background: white;
-    padding: 22px;
+    border: 2px solid #161616;
+    background: #fdfbf3;
+    padding: 18px;
 }
 
 .panel h2 {
-    margin: 0 0 18px 0;
-    font-size: 30px;
-    font-weight: 400;
+    margin: 0 0 16px 0;
+    font-size: 28px;
+    font-weight: 760;
+    letter-spacing: -0.5px;
+}
+
+.section-kicker {
+    display: block;
+    font-family: Consolas, monospace;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #666;
+    margin-bottom: 4px;
 }
 
 .panel-title-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
 }
 
 .status-pill {
-    border-radius: 20px;
-    padding: 8px 14px;
-    border: 1px solid #ddd;
-    font-size: 13px;
+    padding: 7px 11px;
+    border: 2px solid #161616;
+    background: #fdfbf3;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    text-transform: uppercase;
 }
 
 .status-pill.normal {
-    background: #eaf8ef;
-    border-color: #bde5c9;
+    background: #dcefdc;
 }
 
 .status-pill.busy {
-    background: #fff5db;
-    border-color: #f0d28a;
+    background: #f4c430;
 }
 
 .status-pill.stopped {
-    background: #eeeeee;
-    border-color: #dddddd;
+    background: #dedbd2;
 }
 
 .airport-map {
@@ -158,8 +275,8 @@ button {
     width: 100%;
     aspect-ratio: 900 / 480;
     overflow: hidden;
-    border: 1px solid #eeeeee;
-    border-radius: 12px;
+    border: 2px solid #161616;
+    background: #f4f1e8;
 }
 
 .airport-svg {
@@ -170,44 +287,45 @@ button {
 }
 
 .map-bg {
-    fill: #fbfbfb;
+    fill: #f4f1e8;
 }
 
 .holding-line,
 .route-line,
 .taxi-line {
     fill: none;
-    stroke: #999;
+    stroke: #79766f;
     stroke-width: 2;
     stroke-dasharray: 10 8;
 }
 
 .runway {
-    fill: #202020;
+    fill: #181818;
 }
 
 .runway-center {
-    stroke: white;
+    stroke: #fdfbf3;
     stroke-width: 2;
     stroke-dasharray: 14 12;
 }
 
 .gate {
-    fill: white;
-    stroke: #222;
+    fill: #fdfbf3;
+    stroke: #161616;
     stroke-width: 2;
 }
 
 .terminal {
-    fill: #eeeeee;
-    stroke: #222;
+    fill: #dedbd2;
+    stroke: #161616;
     stroke-width: 2;
 }
 
 .map-text,
 .map-text-small,
 .terminal-text {
-    fill: #111;
+    fill: #161616;
+    font-family: Consolas, monospace;
     font-size: 18px;
 }
 
@@ -217,7 +335,7 @@ button {
 
 .terminal-text {
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .plane-layer {
@@ -241,108 +359,135 @@ button {
 .plane-symbol {
     font-size: 30px;
     line-height: 28px;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+    color: #161616;
+    text-shadow: none;
     transition: color 0.2s;
 }
 
 .plane-label {
     margin-top: 2px;
+    font-family: Consolas, monospace;
     font-size: 10px;
-    color: #222;
-    background: rgba(255, 255, 255, 0.86);
-    border: 1px solid #dddddd;
-    border-radius: 8px;
+    color: #161616;
+    background: #fdfbf3;
+    border: 1px solid #161616;
     padding: 1px 5px;
 }
 
 .status-Flying .plane-symbol,
 .status-WaitingForRunway .plane-symbol {
-    color: #1d4ed8;
+    color: #1f4e79;
 }
 
 .status-Landing .plane-symbol {
-    color: #2563eb;
+    color: #0f62a3;
 }
 
 .status-TaxiingToGate .plane-symbol {
-    color: #555;
+    color: #5a5a5a;
 }
 
 .status-AtGate .plane-symbol,
 .status-PreparingDeparture .plane-symbol {
-    color: #0f766e;
+    color: #166534;
 }
 
 .status-TakingOff .plane-symbol {
-    color: #9333ea;
+    color: #7c2d12;
 }
 
 .state-list {
-    margin-bottom: 26px;
+    margin-bottom: 24px;
+    border-top: 2px solid #161616;
 }
 
 .state-list div {
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px solid #eeeeee;
-    padding: 12px 0;
+    border-bottom: 2px solid #161616;
+    padding: 11px 0;
 }
 
 .state-list span {
-    color: #555;
+    color: #333;
 }
 
 .state-list strong {
     font-size: 17px;
+    font-family: Consolas, monospace;
+}
+
+.queue-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.queue-item,
+.queue-empty {
+    border: 2px solid #161616;
+    padding: 9px 12px;
+    background: #f4c430;
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    font-family: Consolas, monospace;
+}
+
+.queue-empty {
+    background: #dedbd2;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    background: #fdfbf3;
 }
 
 th,
 td {
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 2px solid #161616;
     text-align: left;
     padding: 11px;
 }
 
+th {
+    font-family: Consolas, monospace;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
 .status-badge {
     display: inline-block;
-    border-radius: 18px;
-    padding: 5px 12px;
-    font-size: 13px;
-    border: 1px solid #dddddd;
+    padding: 4px 9px;
+    font-size: 12px;
+    border: 2px solid #161616;
+    font-family: Consolas, monospace;
 }
 
 .status-badge.Flying {
-    background: #eaf2ff;
-    border-color: #cbdcff;
+    background: #dbeafe;
 }
 
 .status-badge.WaitingForRunway {
-    background: #fff5db;
-    border-color: #f0d28a;
+    background: #f4c430;
 }
 
 .status-badge.Landing,
 .status-badge.TakingOff {
-    background: #ffecec;
-    border-color: #f3b2b2;
+    background: #ffd8c7;
 }
 
 .status-badge.AtGate,
 .status-badge.PreparingDeparture,
 .status-badge.TaxiingToGate {
-    background: #eaf8ef;
-    border-color: #bde5c9;
+    background: #dcefdc;
 }
 
 .status-badge.Departed {
-    background: #222;
-    color: white;
-    border-color: #222;
+    background: #161616;
+    color: #fdfbf3;
 }
 
 .event-log {
@@ -350,6 +495,7 @@ td {
     overflow: auto;
     font-family: Consolas, monospace;
     font-size: 14px;
+    border-top: 2px solid #161616;
 }
 
 .small-log {
@@ -358,10 +504,24 @@ td {
 
 .event-log div {
     padding: 8px 0;
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid #c8c3b8;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
+    .control-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .tower-panel {
+        position: static;
+        min-height: auto;
+    }
+
+    .tabs,
+    .airport-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .stats-grid {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -373,16 +533,17 @@ td {
 }
 
 @media (max-width: 700px) {
-    .airport-top {
-        flex-direction: column;
-    }
-
-    .airport-top h1 {
-        font-size: 30px;
+    .tower-title h1 {
+        font-size: 25px;
     }
 
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tabs,
+    .airport-buttons {
+        grid-template-columns: 1fr;
     }
 
     .plane-symbol {
