@@ -1,3 +1,5 @@
+let lastState = null;
+
 let connection = new signalR.HubConnectionBuilder()
     .withUrl("/airportHub")
     .withAutomaticReconnect()
@@ -10,6 +12,8 @@ connection.on("ReceiveAirportState", function (state) {
 connection.start().then(function () {
     loadState();
 });
+
+requestAnimationFrame(animatePlanes);
 
 async function startSimulation() {
     const state = await sendPost("/Airport/Start");
@@ -53,10 +57,11 @@ function showTab(tabName) {
 }
 
 function renderState(state) {
+    lastState = state;
     renderStats(state.stats);
     renderPlanesTable(state.airplanes);
     renderLogs(state.logs);
-    renderPlaneMap(state.airplanes);
+    preparePlaneElements(state.airplanes);
 }
 
 function renderStats(stats) {
@@ -124,7 +129,7 @@ function renderLogs(logs) {
     }
 }
 
-function renderPlaneMap(planes) {
+function preparePlaneElements(planes) {
     const layer = document.getElementById("plane-layer");
     const activePlanes = planes.filter(function (plane) {
         return plane.status !== "Departed" && plane.status !== "Cancelled";
@@ -143,7 +148,6 @@ function renderPlaneMap(planes) {
     }
 
     for (const plane of activePlanes) {
-        const position = getPlanePosition(plane);
         let planeElement = document.getElementById("plane-" + plane.id);
 
         if (planeElement === null) {
@@ -156,66 +160,140 @@ function renderPlaneMap(planes) {
             layer.appendChild(planeElement);
         }
 
-        const symbol = planeElement.querySelector(".plane-symbol");
         const label = planeElement.querySelector(".plane-label");
-
-        planeElement.className = "plane status-" + plane.status;
-        planeElement.style.left = percent(position.x, 900);
-        planeElement.style.top = percent(position.y, 480);
-        symbol.style.transform = "rotate(" + position.rotation + "deg)";
         label.textContent = plane.flightNumber;
     }
 }
 
-function getPlanePosition(plane) {
+function animatePlanes() {
+    if (lastState !== null) {
+        const activePlanes = lastState.airplanes.filter(function (plane) {
+            return plane.status !== "Departed" && plane.status !== "Cancelled";
+        });
+
+        for (const plane of activePlanes) {
+            const element = document.getElementById("plane-" + plane.id);
+
+            if (element !== null) {
+                movePlane(element, plane);
+            }
+        }
+    }
+
+    requestAnimationFrame(animatePlanes);
+}
+
+function movePlane(element, plane) {
+    const point = getAnimatedPoint(plane);
+    const symbol = element.querySelector(".plane-symbol");
+
+    element.className = "plane status-" + plane.status;
+    element.style.left = percent(point.x, 900);
+    element.style.top = percent(point.y, 480);
+    symbol.style.transform = "rotate(" + point.rotation + "deg)";
+}
+
+function getAnimatedPoint(plane) {
+    const now = Date.now();
+    const updatedAt = new Date(plane.updatedAt).getTime();
+    const statusTime = Math.max(0, now - updatedAt);
+
     if (plane.status === "Flying") {
-        return holdingPosition(plane.id, 0);
+        return getOrbitPoint(plane.id, now, 18000, 0);
     }
 
     if (plane.status === "WaitingForRunway") {
-        return holdingPosition(plane.id, 35);
+        return getOrbitPoint(plane.id, now, 25000, 45);
     }
 
     if (plane.status === "Landing") {
         const runwayY = getRunwayY(plane.runwayNumber);
-        return { x: 625, y: runwayY, rotation: 40 };
+        const start = getOrbitPoint(plane.id, updatedAt, 25000, 45);
+        const middle = { x: 520, y: runwayY - 60, rotation: 45 };
+        const end = { x: 645, y: runwayY, rotation: 0 };
+        return getPathPoint(statusTime, 12000, [start, middle, end]);
     }
 
     if (plane.status === "TaxiingToGate") {
+        const runwayY = 282;
         const gate = getGatePosition(plane.gateNumber);
-        return { x: gate.x, y: 330, rotation: 90 };
+        const start = { x: 640, y: runwayY, rotation: 180 };
+        const middle = { x: gate.x, y: 330, rotation: 90 };
+        const end = { x: gate.x + getSmallOffset(plane.id), y: 357, rotation: 90 };
+        return getPathPoint(statusTime, 9000, [start, middle, end]);
     }
 
     if (plane.status === "AtGate") {
         const gate = getGatePosition(plane.gateNumber);
-        return { x: gate.x, y: 365, rotation: 0 };
+        return {
+            x: gate.x + getSmallOffset(plane.id),
+            y: 367,
+            rotation: 0
+        };
     }
 
     if (plane.status === "PreparingDeparture") {
         const gate = getGatePosition(plane.gateNumber);
-        return { x: gate.x, y: 365, rotation: 0 };
+        const lift = Math.sin(now / 500) * 3;
+
+        return {
+            x: gate.x + getSmallOffset(plane.id),
+            y: 367 + lift,
+            rotation: 0
+        };
     }
 
     if (plane.status === "TakingOff") {
+        const gate = getGatePosition(plane.gateNumber);
         const runwayY = getRunwayY(plane.runwayNumber);
-        return { x: 760, y: runwayY - 20, rotation: 25 };
+        const start = { x: gate.x + getSmallOffset(plane.id), y: 357, rotation: 0 };
+        const middle = { x: gate.x, y: runwayY, rotation: -90 };
+        const runway = { x: 565, y: runwayY, rotation: 0 };
+        const end = { x: 840, y: runwayY - 55, rotation: 25 };
+        return getPathPoint(statusTime, 12000, [start, middle, runway, end]);
     }
 
     return { x: 270, y: 110, rotation: 0 };
 }
 
-function holdingPosition(id, shift) {
-    const places = [
-        { x: 120, y: 108, rotation: -15 },
-        { x: 270, y: 50, rotation: 5 },
-        { x: 425, y: 115, rotation: 20 },
-        { x: 270, y: 170, rotation: 0 },
-        { x: 175, y: 155, rotation: -5 },
-        { x: 365, y: 65, rotation: 12 }
-    ];
+function getOrbitPoint(id, now, duration, angleShift) {
+    const centerX = 270;
+    const centerY = 110;
+    const radiusX = 170;
+    const radiusY = 70;
+    const slot = id % 6;
+    const angle = ((now % duration) / duration) * Math.PI * 2 + slot * 0.8 + angleShift * Math.PI / 180;
+    const x = centerX + Math.cos(angle) * radiusX;
+    const y = centerY + Math.sin(angle) * radiusY;
+    const rotation = angle * 180 / Math.PI + 90;
 
-    const index = (id + shift) % places.length;
-    return places[index];
+    return {
+        x: x,
+        y: y,
+        rotation: rotation
+    };
+}
+
+function getPathPoint(time, duration, points) {
+    const progress = Math.min(time / duration, 1);
+    const partCount = points.length - 1;
+    const full = progress * partCount;
+    const index = Math.min(Math.floor(full), partCount - 1);
+    const local = full - index;
+
+    return mixPoints(points[index], points[index + 1], smooth(local));
+}
+
+function mixPoints(a, b, progress) {
+    return {
+        x: a.x + (b.x - a.x) * progress,
+        y: a.y + (b.y - a.y) * progress,
+        rotation: a.rotation + (b.rotation - a.rotation) * progress
+    };
+}
+
+function smooth(value) {
+    return value * value * (3 - 2 * value);
 }
 
 function getRunwayY(runway) {
@@ -240,6 +318,11 @@ function getGatePosition(gate) {
     }
 
     return { x: 465, y: 365 };
+}
+
+function getSmallOffset(id) {
+    const offsets = [-18, 0, 18, -9, 9];
+    return offsets[id % offsets.length];
 }
 
 function percent(value, max) {

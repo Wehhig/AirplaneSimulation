@@ -169,7 +169,7 @@ public class AirportService
 
             try
             {
-                await Task.Delay(GetRandomNumber(3000, 6000), token);
+                await Task.Delay(GetRandomNumber(9000, 15000), token);
             }
             catch
             {
@@ -210,7 +210,7 @@ public class AirportService
 
         try
         {
-            await DelayRandom(1000, 2500, token);
+            await DelayRandom(5000, 9000, token);
 
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "WaitingForRunway", null, null);
@@ -226,7 +226,7 @@ public class AirportService
             AddPlaneLog(planeId, $"got runway {landingRunway} and is landing");
             SendState();
 
-            await DelayRandom(3000, 5000, token);
+            await DelayRandom(9000, 14000, token);
 
             ReleaseRunway(landingRunway);
             landingRunwayTaken = false;
@@ -237,21 +237,21 @@ public class AirportService
             AddPlaneLog(planeId, $"is taxiing to gate {gate}");
             SendState();
 
-            await DelayRandom(2000, 3500, token);
+            await DelayRandom(7000, 11000, token);
 
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "AtGate", null, gate);
             AddPlaneLog(planeId, $"reached gate {gate}");
             SendState();
 
-            await DelayRandom(4000, 7000, token);
+            await DelayRandom(12000, 18000, token);
 
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "PreparingDeparture", null, gate);
             AddPlaneLog(planeId, "is preparing for departure");
             SendState();
 
-            await DelayRandom(2000, 4000, token);
+            await DelayRandom(7000, 11000, token);
 
             await _runwaySemaphore.WaitAsync(token);
             takeoffRunwayTaken = true;
@@ -262,7 +262,7 @@ public class AirportService
             AddPlaneLog(planeId, $"got runway {takeoffRunway} and is taking off");
             SendState();
 
-            await DelayRandom(3000, 5000, token);
+            await DelayRandom(9000, 14000, token);
 
             ReleaseRunway(takeoffRunway);
             takeoffRunwayTaken = false;

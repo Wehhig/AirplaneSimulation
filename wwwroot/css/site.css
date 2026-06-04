@@ -229,28 +229,27 @@ button {
 .plane {
     position: absolute;
     transform: translate(-50%, -50%);
-    width: 72px;
+    width: 76px;
     height: 52px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: left 1.4s ease, top 1.4s ease, opacity 0.4s ease;
     z-index: 4;
 }
 
 .plane-symbol {
     font-size: 30px;
     line-height: 28px;
-    transition: transform 1.4s ease;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+    transition: color 0.2s;
 }
 
 .plane-label {
     margin-top: 2px;
     font-size: 10px;
     color: #222;
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.86);
     border: 1px solid #dddddd;
     border-radius: 8px;
     padding: 1px 5px;
@@ -258,11 +257,11 @@ button {
 
 .status-Flying .plane-symbol,
 .status-WaitingForRunway .plane-symbol {
-    animation: planeFloat 1.6s ease-in-out infinite;
+    color: #1d4ed8;
 }
 
 .status-Landing .plane-symbol {
-    color: #1d4ed8;
+    color: #2563eb;
 }
 
 .status-TaxiingToGate .plane-symbol {
@@ -276,20 +275,6 @@ button {
 
 .status-TakingOff .plane-symbol {
     color: #9333ea;
-}
-
-@keyframes planeFloat {
-    0% {
-        margin-top: 0;
-    }
-
-    50% {
-        margin-top: -8px;
-    }
-
-    100% {
-        margin-top: 0;
-    }
 }
 
 .state-list {
