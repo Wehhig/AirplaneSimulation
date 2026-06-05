@@ -1,115 +1,135 @@
-# Airport Control Simulator
+# ✈️ Airport Control Simulator
 
-Aplikacja webowa w ASP.NET Core symulująca pracę kontroli lotniska. Samoloty pojawiają się w powietrzu, krążą w holding area, oczekują na pas startowy, lądują, kołują do bramek, przygotowują się do odlotu i startują z pasa.
+![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-MVC-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![SignalR](https://img.shields.io/badge/SignalR-Live%20Updates-00A86B?style=for-the-badge)
+![CSharp](https://img.shields.io/badge/C%23-Concurrency-239120?style=for-the-badge&logo=csharp&logoColor=white)
+![Status](https://img.shields.io/badge/Project-Ready%20to%20present-FACC15?style=for-the-badge)
 
-Projekt został przygotowany jako aplikacja zaliczeniowa pokazująca mechanizmy współbieżności, synchronizacji oraz komunikacji w czasie rzeczywistym.
+**Airport Control Simulator** to webowa symulacja pracy lotniska w ASP.NET Core.  
+Samoloty krążą w holding area, czekają na wolny gate, lądują, kołują do bramek i startują z pasa w czasie rzeczywistym.
 
-## Funkcje
+<p align="center">
+  <img src="screenshots/demo.gif" alt="Airport Control Simulator preview" width="900" />
+</p>
 
-- symulacja ruchu samolotów w czasie rzeczywistym,
-- animowana mapa lotniska SVG,
-- dwie zakładki: Simulation oraz Admin / Data,
-- start, stop i reset symulacji,
-- ręczne dodawanie samolotów,
-- tryb automatycznego generowania samolotów,
-- dodawanie samolotu awaryjnego,
-- kolejka samolotów oczekujących na pas,
-- statystyki lotniska,
-- log zdarzeń,
-- tryb jasny i ciemny,
-- czyszczenie zakończonych lotów z tabeli,
-- sterowanie szybkością symulacji przed uruchomieniem,
-- limit aktywnych samolotów,
-- status pasów startowych i bramek,
-- licznik czasu symulacji.
+---
 
-## Zastosowane mechanizmy
+## 🚀 Najważniejsze funkcje
 
-| Mechanizm | Zastosowanie |
-|---|---|
-| `lock` | zabezpiecza listę samolotów, logi, stan symulacji i statystyki |
-| `SemaphoreSlim` | ogranicza liczbę dostępnych pasów startowych |
-| `Task.Run` | uruchamia obsługę samolotów i generator samolotów w tle |
-| `async/await` | obsługuje opóźnienia etapów symulacji bez blokowania aplikacji |
-| SignalR / WebSocket | wysyła aktualny stan lotniska do przeglądarki w czasie rzeczywistym |
-| AJAX / fetch | obsługuje przyciski sterujące bez przeładowania strony |
+- ✈️ animowana mapa lotniska,
+- 🛬 lądowanie i start według tras na SVG,
+- 🧵 osobne zadania dla samolotów,
+- 🚦 ograniczona liczba pasów startowych,
+- 🧱 blokowanie zajętych gate’ów,
+- 🚨 emergency plane z priorytetem,
+- 🌙 dark mode,
+- ⚡ live update przez SignalR,
+- 🧾 panel Admin / Data z logami, runwayami i gate’ami,
+- 🕒 licznik czasu symulacji,
+- 🧹 czyszczenie zakończonych lotów.
 
-## Widok aplikacji
+---
 
-### Simulation
+## 🖼️ Podgląd aplikacji
+
+### 🎮 Simulation
 
 ![Simulation view](screenshots/simulation.png)
 
-### Admin / Data
+### 🧭 Admin / Data
 
 ![Admin view](screenshots/admin.png)
 
-![Admin log](screenshots/admin-log.png)
+---
 
-## Technologie
+## 🧠 Co pokazuje projekt?
 
-- ASP.NET Core MVC
-- C#
-- SignalR
-- HTML
-- CSS
-- JavaScript
-- SVG
+| Mechanizm | Rola w projekcie |
+|---|---|
+| `lock` | chroni wspólny stan symulacji |
+| `SemaphoreSlim` | ogranicza dostęp do runwayów i gate’ów |
+| `Task.Run` | uruchamia obsługę samolotów w tle |
+| `async/await` | pozwala symulować opóźnienia bez blokowania aplikacji |
+| SignalR | wysyła live update do frontendu |
+| fetch / AJAX | obsługuje przyciski bez przeładowania strony |
 
-## Uruchomienie projektu
+---
 
-Wymagane jest zainstalowane .NET SDK.
+## 🛠️ Technologie
+
+```text
+ASP.NET Core MVC
+C#
+SignalR
+JavaScript
+HTML / CSS
+SVG
+```
+
+---
+
+## ▶️ Uruchomienie
 
 ```powershell
 dotnet restore
 dotnet run
 ```
 
-Po uruchomieniu aplikacja będzie dostępna pod adresem pokazanym w terminalu, na przykład:
+Po uruchomieniu otwórz adres pokazany w terminalu, np.:
 
 ```text
 https://localhost:7246
 ```
 
-## Struktura projektu
+---
+
+## 🧩 Jak działa symulacja?
+
+1. Samolot pojawia się w powietrzu.
+2. Krąży w holding area.
+3. Czeka, aż będzie wolny gate.
+4. Rezerwuje gate.
+5. Czeka na wolny runway.
+6. Ląduje i kołuje do gate.
+7. Przygotowuje się do odlotu.
+8. Startuje i znika z mapy.
+
+Dzięki temu korek tworzy się głównie w powietrzu, a nie na pasie startowym.
+
+---
+
+## 🎛️ Panel sterowania
+
+| Przycisk | Działanie |
+|---|---|
+| Start | uruchamia symulację |
+| Stop | zatrzymuje symulację |
+| Reset | resetuje stan lotniska |
+| Add Plane | dodaje zwykły samolot |
+| Emergency Plane | dodaje samolot awaryjny |
+| Clear Departed | czyści zakończone loty |
+| Dark mode | przełącza motyw |
+| Slow / Normal / Fast | ustawia szybkość przed startem |
+
+---
+
+## 📁 Struktura
 
 ```text
 Samoloty
 ├── Controllers
-│   └── AirportController.cs
 ├── Hubs
-│   └── AirportHub.cs
 ├── Models
-│   ├── Airplane.cs
-│   ├── AirportState.cs
-│   └── AirportStats.cs
 ├── Services
-│   └── AirportService.cs
 ├── Views
-│   └── Airport
-│       └── Index.cshtml
-└── wwwroot
-    ├── css
-    │   └── site.css
-    └── js
-        └── airport.js
+├── wwwroot
+│   ├── css
+│   └── js
+└── screenshots
 ```
 
-## Opis działania
+---
 
-Po uruchomieniu symulacji aplikacja tworzy samoloty i obsługuje każdy z nich w osobnym zadaniu. Samolot przechodzi przez kolejne etapy: lot w powietrzu, oczekiwanie na pas, lądowanie, kołowanie do bramki, postój przy bramce, przygotowanie do odlotu i start.
+## ✅ Status
 
-Dostęp do pasów startowych jest ograniczony przez `SemaphoreSlim`. Dzięki temu jednocześnie z pasa może korzystać tylko określona liczba samolotów. Wspólne dane są zabezpieczone przez `lock`, aby kilka zadań nie zmieniało ich jednocześnie.
-
-Frontend otrzymuje aktualny stan przez SignalR i aktualizuje mapę, tabelę, logi oraz statystyki bez ręcznego odświeżania strony.
-
-## Uwagi
-
-Zmiana szybkości symulacji jest wykonywana przed startem symulacji. Jeżeli symulacja już działa, aplikacja zapisuje w logach informację, że przed zmianą szybkości trzeba ją zatrzymać. Dzięki temu aktywne zadania samolotów nie są przerywane w połowie trasy.
-
-
-## Ograniczenie ruchu
-
-Aplikacja ogranicza liczbę aktywnych samolotów, aby mapa pozostała czytelna. Zwykłe samoloty nie są dodawane po przekroczeniu limitu ruchu, natomiast samolot awaryjny nadal może zostać dodany ręcznie.
-
-Gate jest rezerwowany przed lądowaniem. Dzięki temu samolot nie opuszcza holding area, dopóki nie ma dla niego miejsca przy bramce. Korek tworzy się więc w powietrzu, a nie na pasie startowym.
+Projekt jest gotowy do prezentacji i zawiera wymagane mechanizmy współbieżności oraz komunikacji live.
