@@ -1,0 +1,36 @@
+.plane-symbol {
+    width: 34px;
+    height: 34px;
+    line-height: 0;
+    color: #161616;
+    transition: color 0.2s;
+}
+
+.plane-icon {
+    width: 34px;
+    height: 34px;
+    display: block;
+    fill: currentColor;
+}
+
+.status-Flying .plane-symbol,
+.status-WaitingForRunway .plane-symbol {
+    color: #1f4e79;
+}
+
+.status-Landing .plane-symbol {
+    color: #0f62a3;
+}
+
+.status-TaxiingToGate .plane-symbol {
+    color: #5a5a5a;
+}
+
+.status-AtGate .plane-symbol,
+.status-PreparingDeparture .plane-symbol {
+    color: #166534;
+}
+
+.status-TakingOff .plane-symbol {
+    color: #7c2d12;
+}

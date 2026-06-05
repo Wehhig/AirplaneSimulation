@@ -101,12 +101,15 @@ function renderStats(stats) {
     document.getElementById("state-speed").textContent = stats.speedMode;
 
     const autoButton = document.getElementById("auto-mode-button");
-    autoButton.textContent = stats.autoMode ? "Auto Mode: ON" : "Auto Mode: OFF";
 
-    if (stats.autoMode) {
-        autoButton.classList.add("active-control");
-    } else {
-        autoButton.classList.remove("active-control");
+    if (autoButton !== null) {
+        autoButton.textContent = stats.autoMode ? "Auto Mode: ON" : "Auto Mode: OFF";
+
+        if (stats.autoMode) {
+            autoButton.classList.add("active-control");
+        } else {
+            autoButton.classList.remove("active-control");
+        }
     }
 
     updateSpeedButtons(stats.speedMode);
@@ -244,7 +247,7 @@ function preparePlaneElements(planes) {
             planeElement.id = "plane-" + plane.id;
             planeElement.className = "plane";
             planeElement.innerHTML =
-                "<div class='plane-symbol'>✈</div>" +
+                "<div class='plane-symbol'>" + planeSvg() + "</div>" +
                 "<div class='plane-label'></div>";
             layer.appendChild(planeElement);
         }
@@ -258,19 +261,18 @@ function preparePlaneElements(planes) {
 
 function prepareClientPlane(plane) {
     const key = String(plane.id);
-    const point = getInitialPoint(plane);
+    const pointValue = getInitialPoint(plane);
 
     if (!clientPlanes[key]) {
         clientPlanes[key] = {
-            x: point.x,
-            y: point.y,
-            rotation: point.rotation,
+            x: pointValue.x,
+            y: pointValue.y,
+            rotation: pointValue.rotation,
             status: plane.status,
             runway: plane.runwayNumber,
             gate: plane.gateNumber,
             started: Date.now(),
-            from: point,
-            transition: null
+            route: null
         };
 
         return;
@@ -279,17 +281,11 @@ function prepareClientPlane(plane) {
     const visual = clientPlanes[key];
 
     if (visual.status !== plane.status || visual.runway !== plane.runwayNumber || visual.gate !== plane.gateNumber) {
-        visual.from = {
-            x: visual.x,
-            y: visual.y,
-            rotation: visual.rotation
-        };
-
         visual.status = plane.status;
         visual.runway = plane.runwayNumber;
         visual.gate = plane.gateNumber;
         visual.started = Date.now();
-        visual.transition = createTransition(plane, visual);
+        visual.route = createRouteForStatus(plane, visual);
     }
 }
 
@@ -319,99 +315,32 @@ function movePlane(element, plane) {
     }
 
     const visual = clientPlanes[key];
-    const point = getAnimatedPoint(plane, visual);
+    const pointValue = getPlanePoint(plane, visual);
     const symbol = element.querySelector(".plane-symbol");
 
-    visual.x = point.x;
-    visual.y = point.y;
-    visual.rotation = point.rotation;
+    visual.x = pointValue.x;
+    visual.y = pointValue.y;
+    visual.rotation = pointValue.rotation;
 
     element.className = "plane status-" + plane.status;
-    element.style.left = percent(point.x, 900);
-    element.style.top = percent(point.y, 480);
-    symbol.style.transform = "rotate(" + point.rotation + "deg)";
-}
-
-function createTransition(plane, visual) {
-    if (plane.status === "Landing") {
-        const startAngle = getOrbitAngleFromPoint(visual.from);
-        const exitAngle = getForwardExitAngle(startAngle, 0.48);
-
-        return {
-            name: "Landing",
-            startAngle: startAngle,
-            exitAngle: exitAngle
-        };
-    }
-
-    if (plane.status === "TaxiingToGate") {
-        return {
-            name: "TaxiingToGate",
-            from: visual.from
-        };
-    }
-
-    if (plane.status === "AtGate") {
-        return {
-            name: "AtGate",
-            from: visual.from
-        };
-    }
-
-    if (plane.status === "PreparingDeparture") {
-        return {
-            name: "PreparingDeparture",
-            from: visual.from
-        };
-    }
-
-    if (plane.status === "TakingOff") {
-        return {
-            name: "TakingOff",
-            from: visual.from
-        };
-    }
-
-    return null;
+    element.style.left = percent(pointValue.x, 900);
+    element.style.top = percent(pointValue.y, 480);
+    symbol.style.transform = "rotate(" + pointValue.rotation + "deg)";
 }
 
 function getInitialPoint(plane) {
     const now = Date.now();
 
-    if (plane.status === "Flying" || plane.status === "WaitingForRunway") {
-        return getOrbitPoint(plane.id, now, 24000, 0);
-    }
-
-    if (plane.status === "Landing") {
-        return getOrbitPoint(plane.id, now, 24000, 0);
+    if (plane.status === "Flying" || plane.status === "WaitingForRunway" || plane.status === "Landing") {
+        return getOrbitPoint(plane.id, now, 32000, 0);
     }
 
     if (plane.status === "TaxiingToGate") {
-        return {
-            x: 650,
-            y: getRunwayY(plane.runwayNumber),
-            rotation: 0
-        };
+        return getP3(plane.runwayNumber, plane.id);
     }
 
-    if (plane.status === "AtGate" || plane.status === "PreparingDeparture") {
-        const gate = getGatePosition(plane.gateNumber);
-
-        return {
-            x: gate.x + getSmallOffset(plane.id),
-            y: 367,
-            rotation: 0
-        };
-    }
-
-    if (plane.status === "TakingOff") {
-        const gate = getGatePosition(plane.gateNumber);
-
-        return {
-            x: gate.x + getSmallOffset(plane.id),
-            y: 367,
-            rotation: 0
-        };
+    if (plane.status === "AtGate" || plane.status === "PreparingDeparture" || plane.status === "TakingOff") {
+        return getGateStop(plane.gateNumber, plane.id);
     }
 
     return {
@@ -421,117 +350,309 @@ function getInitialPoint(plane) {
     };
 }
 
-function getAnimatedPoint(plane, visual) {
-    const now = Date.now();
-    const statusTime = Math.max(0, now - visual.started);
-
-    if (plane.status === "Flying") {
-        return getOrbitPoint(plane.id, now, 26000, 0);
-    }
-
-    if (plane.status === "WaitingForRunway") {
-        return getOrbitPoint(plane.id, now, 32000, 40);
-    }
-
+function createRouteForStatus(plane, visual) {
     if (plane.status === "Landing") {
-        return getLandingPoint(plane, visual, statusTime);
+        return createLandingRoute(plane, visual);
     }
 
     if (plane.status === "TaxiingToGate") {
-        return getTaxiToGatePoint(plane, visual, statusTime);
+        return createTaxiToGateRoute(plane, visual);
     }
 
     if (plane.status === "AtGate") {
-        return getAtGatePoint(plane, visual, statusTime);
+        return createAtGateRoute(plane, visual);
     }
 
     if (plane.status === "PreparingDeparture") {
-        return getPreparingPoint(plane, visual, statusTime, now);
+        return createPreparingRoute(plane, visual);
     }
 
     if (plane.status === "TakingOff") {
-        return getTakingOffPoint(plane, visual, statusTime);
+        return createTakeoffRoute(plane, visual);
     }
 
-    return visual;
+    return null;
 }
 
-function getLandingPoint(plane, visual, statusTime) {
-    const transition = visual.transition || createTransition(plane, visual);
-    const runwayY = getRunwayY(plane.runwayNumber);
-    const exit = getOrbitPointByAngle(transition.exitAngle);
-    const downwind = { x: 500, y: runwayY - 92, rotation: 45 };
-    const finalApproach = { x: 585, y: runwayY - 42, rotation: 25 };
-    const touchdown = { x: 650, y: runwayY, rotation: 0 };
+function getPlanePoint(plane, visual) {
+    const now = Date.now();
+    const time = Math.max(0, now - visual.started);
 
-    if (statusTime < 4300) {
-        const progress = smooth(statusTime / 4300);
-        const angle = transition.startAngle + (transition.exitAngle - transition.startAngle) * progress;
-        return getOrbitPointByAngle(angle);
+    if (plane.status === "Flying") {
+        return getOrbitPoint(plane.id, now, 32000, 0);
     }
 
-    if (statusTime < 9000) {
-        return getPathPoint(statusTime - 4300, 4700, [exit, downwind, finalApproach]);
+    if (plane.status === "WaitingForRunway") {
+        return getOrbitPoint(plane.id, now, 36000, 40);
     }
 
-    return getPathPoint(statusTime - 9000, 4200, [finalApproach, touchdown, { x: 690, y: runwayY, rotation: 0 }]);
-}
+    if (plane.status === "Landing") {
+        if (!visual.route) {
+            visual.route = createLandingRoute(plane, visual);
+            visual.started = Date.now();
+        }
 
-function getTaxiToGatePoint(plane, visual, statusTime) {
-    const transition = visual.transition || createTransition(plane, visual);
-    const gate = getGatePosition(plane.gateNumber);
-    const runwayY = transition.from.y;
-    const runwayExit = { x: gate.x, y: runwayY, rotation: 0 };
-    const taxiTurn = { x: gate.x, y: 330, rotation: 90 };
-    const gateHold = { x: gate.x + getSmallOffset(plane.id), y: 357, rotation: 90 };
+        return getRoutePoint(visual.route, time);
+    }
 
-    return getPathPoint(statusTime, 9500, [transition.from, runwayExit, taxiTurn, gateHold]);
-}
+    if (plane.status === "TaxiingToGate") {
+        if (!visual.route) {
+            visual.route = createTaxiToGateRoute(plane, visual);
+            visual.started = Date.now();
+        }
 
-function getAtGatePoint(plane, visual, statusTime) {
-    const transition = visual.transition || createTransition(plane, visual);
-    const gate = getGatePosition(plane.gateNumber);
-    const gateStop = { x: gate.x + getSmallOffset(plane.id), y: 367, rotation: 0 };
+        return getRoutePoint(visual.route, time);
+    }
 
-    return getPathPoint(statusTime, 2600, [transition.from, gateStop]);
-}
+    if (plane.status === "AtGate") {
+        if (!visual.route) {
+            visual.route = createAtGateRoute(plane, visual);
+            visual.started = Date.now();
+        }
 
-function getPreparingPoint(plane, visual, statusTime, now) {
-    const transition = visual.transition || createTransition(plane, visual);
-    const gate = getGatePosition(plane.gateNumber);
-    const base = { x: gate.x + getSmallOffset(plane.id), y: 367, rotation: 0 };
-    const lift = Math.sin(now / 450) * 2;
+        return getRoutePoint(visual.route, time);
+    }
 
-    if (statusTime < 2600) {
-        return getPathPoint(statusTime, 2600, [transition.from, base]);
+    if (plane.status === "PreparingDeparture") {
+        if (!visual.route) {
+            visual.route = createPreparingRoute(plane, visual);
+            visual.started = Date.now();
+        }
+
+        const base = getRoutePoint(visual.route, time);
+        const idle = Math.min(time / 1500, 1);
+
+        return {
+            x: base.x,
+            y: base.y + Math.sin(now / 450) * 2 * idle,
+            rotation: base.rotation
+        };
+    }
+
+    if (plane.status === "TakingOff") {
+        if (!visual.route) {
+            visual.route = createTakeoffRoute(plane, visual);
+            visual.started = Date.now();
+        }
+
+        return getRoutePoint(visual.route, time);
     }
 
     return {
-        x: base.x,
-        y: base.y + lift,
-        rotation: 0
+        x: visual.x,
+        y: visual.y,
+        rotation: visual.rotation
     };
 }
 
-function getTakingOffPoint(plane, visual, statusTime) {
-    const transition = visual.transition || createTransition(plane, visual);
-    const gate = getGatePosition(plane.gateNumber);
+function createLandingRoute(plane, visual) {
     const runwayY = getRunwayY(plane.runwayNumber);
-    const pushback = { x: gate.x + getSmallOffset(plane.id), y: 340, rotation: 180 };
-    const taxiToLine = { x: gate.x, y: 320, rotation: -90 };
-    const runwayEntry = { x: 470, y: runwayY, rotation: 0 };
-    const rolling = { x: 650, y: runwayY, rotation: 0 };
-    const climb = { x: 845, y: runwayY - 65, rotation: 25 };
+    const startAngle = getOrbitAngleFromPoint({ x: visual.x, y: visual.y });
+    const exitAngle = getForwardExitAngle(startAngle, 0.62);
+    const p1 = getOrbitPointByAngle(exitAngle);
+    const p2 = getP2(plane.runwayNumber);
+    const p3 = getP3(plane.runwayNumber, plane.id);
 
-    if (statusTime < 3500) {
-        return getPathPoint(statusTime, 3500, [transition.from, pushback, taxiToLine]);
+    return {
+        type: "landing",
+        startAngle: startAngle,
+        exitAngle: exitAngle,
+        p1: p1,
+        approach: [
+            p1,
+            point(480, 168),
+            point(575, 185),
+            point(660, 225),
+            point(730, runwayY - 12),
+            p2
+        ],
+        rollout: [
+            p2,
+            point(610, runwayY),
+            point(480, runwayY),
+            point(350, runwayY),
+            p3
+        ],
+        duration: 10500
+    };
+}
+
+function createTaxiToGateRoute(plane, visual) {
+    const gate = getGatePosition(plane.gateNumber);
+    const runwayY = getNearestRunwayY(visual.y);
+    const start = point(visual.x, visual.y);
+    const gateTaxiX = gate.x;
+
+    return route([
+        start,
+        point(gateTaxiX, runwayY),
+        point(gateTaxiX, 330),
+        point(gateTaxiX, 350),
+        getGateStop(plane.gateNumber, plane.id)
+    ], 8500);
+}
+
+function createAtGateRoute(plane, visual) {
+    return route([
+        point(visual.x, visual.y),
+        getGateStop(plane.gateNumber, plane.id)
+    ], 1800);
+}
+
+function createPreparingRoute(plane, visual) {
+    return route([
+        point(visual.x, visual.y),
+        getGateStop(plane.gateNumber, plane.id)
+    ], 1200);
+}
+
+function createTakeoffRoute(plane, visual) {
+    const runwayY = getRunwayY(plane.runwayNumber);
+    const gate = getGatePosition(plane.gateNumber);
+    const runwayStart = getP3(plane.runwayNumber, plane.id);
+    const p6 = getP6(plane.runwayNumber);
+
+    return route([
+        point(visual.x, visual.y),
+        point(gate.x, 350),
+        point(gate.x, 330),
+        point(gate.x, runwayY),
+        runwayStart,
+        point(360, runwayY),
+        point(520, runwayY),
+        point(705, runwayY),
+        p6
+    ], 11500);
+}
+
+function getRoutePoint(routeData, time) {
+    if (routeData.type === "landing") {
+        return getLandingRoutePoint(routeData, time);
     }
 
-    if (statusTime < 7800) {
-        return getPathPoint(statusTime - 3500, 4300, [taxiToLine, runwayEntry]);
+    return getPolylinePoint(routeData.points, routeData.duration, time);
+}
+
+function getLandingRoutePoint(routeData, time) {
+    const orbitTime = 3200;
+    const approachTime = 3600;
+    const rolloutTime = 3700;
+
+    if (time < orbitTime) {
+        const progress = smooth(time / orbitTime);
+        const angle = routeData.startAngle + (routeData.exitAngle - routeData.startAngle) * progress;
+        return getOrbitPointByAngle(angle);
     }
 
-    return getPathPoint(statusTime - 7800, 6200, [runwayEntry, rolling, climb]);
+    if (time < orbitTime + approachTime) {
+        return getPolylinePoint(routeData.approach, approachTime, time - orbitTime);
+    }
+
+    if (time < orbitTime + approachTime + rolloutTime) {
+        return getPolylinePoint(routeData.rollout, rolloutTime, time - orbitTime - approachTime);
+    }
+
+    const last = routeData.rollout[routeData.rollout.length - 1];
+    const beforeLast = routeData.rollout[routeData.rollout.length - 2];
+
+    return {
+        x: last.x,
+        y: last.y,
+        rotation: direction(beforeLast, last)
+    };
+}
+
+function route(points, duration) {
+    const clean = [];
+
+    for (const item of points) {
+        clean.push({ x: item.x, y: item.y });
+    }
+
+    return {
+        type: "polyline",
+        points: clean,
+        duration: duration
+    };
+}
+
+function point(x, y) {
+    return {
+        x: x,
+        y: y
+    };
+}
+
+function getPolylinePoint(points, duration, time) {
+    if (points.length === 1) {
+        return {
+            x: points[0].x,
+            y: points[0].y,
+            rotation: 0
+        };
+    }
+
+    const lengths = [];
+    let total = 0;
+
+    for (let i = 0; i < points.length - 1; i++) {
+        const length = distance(points[i], points[i + 1]);
+        lengths.push(length);
+        total += length;
+    }
+
+    if (total === 0) {
+        return {
+            x: points[0].x,
+            y: points[0].y,
+            rotation: 0
+        };
+    }
+
+    const progress = Math.min(time / duration, 1);
+    const targetDistance = total * smooth(progress);
+    let current = 0;
+
+    for (let i = 0; i < lengths.length; i++) {
+        const next = current + lengths[i];
+
+        if (targetDistance <= next || i === lengths.length - 1) {
+            const local = lengths[i] === 0 ? 0 : (targetDistance - current) / lengths[i];
+            const a = points[i];
+            const b = points[i + 1];
+            const x = a.x + (b.x - a.x) * local;
+            const y = a.y + (b.y - a.y) * local;
+            const rotation = direction(a, b);
+
+            return {
+                x: x,
+                y: y,
+                rotation: rotation
+            };
+        }
+
+        current = next;
+    }
+
+    const last = points[points.length - 1];
+    const beforeLast = points[points.length - 2];
+
+    return {
+        x: last.x,
+        y: last.y,
+        rotation: direction(beforeLast, last)
+    };
+}
+
+function distance(a, b) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function direction(a, b) {
+    return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
 }
 
 function getOrbitPoint(id, now, duration, angleShift) {
@@ -557,45 +678,23 @@ function getOrbitPointByAngle(angle) {
     };
 }
 
-function getOrbitAngleFromPoint(point) {
+function getOrbitAngleFromPoint(pointValue) {
     const centerX = 270;
     const centerY = 110;
     const radiusX = 170;
     const radiusY = 70;
-    return Math.atan2((point.y - centerY) / radiusY, (point.x - centerX) / radiusX);
+
+    return Math.atan2((pointValue.y - centerY) / radiusY, (pointValue.x - centerX) / radiusX);
 }
 
 function getForwardExitAngle(startAngle, exitAngle) {
     let result = exitAngle;
 
-    while (result <= startAngle) {
+    while (result <= startAngle + 0.35) {
         result += Math.PI * 2;
     }
 
     return result;
-}
-
-function getPathPoint(time, duration, points) {
-    const progress = Math.min(time / duration, 1);
-    const partCount = points.length - 1;
-    const full = progress * partCount;
-    const index = Math.min(Math.floor(full), partCount - 1);
-    const local = full - index;
-
-    return mixPoints(points[index], points[index + 1], smooth(local));
-}
-
-function mixPoints(a, b, progress) {
-    return {
-        x: a.x + (b.x - a.x) * progress,
-        y: a.y + (b.y - a.y) * progress,
-        rotation: mixAngle(a.rotation, b.rotation, progress)
-    };
-}
-
-function mixAngle(a, b, progress) {
-    let diff = ((b - a + 540) % 360) - 180;
-    return a + diff * progress;
 }
 
 function smooth(value) {
@@ -608,6 +707,43 @@ function getRunwayY(runway) {
     }
 
     return 253;
+}
+
+function getNearestRunwayY(y) {
+    const y1 = 253;
+    const y2 = 283;
+
+    if (Math.abs(y - y2) < Math.abs(y - y1)) {
+        return y2;
+    }
+
+    return y1;
+}
+
+function getP2(runway) {
+    return {
+        x: 705,
+        y: getRunwayY(runway)
+    };
+}
+
+function getP3(runway, id) {
+    return {
+        x: 270,
+        y: getRunwayY(runway) + getRunwayStopOffset(id)
+    };
+}
+
+function getP6(runway) {
+    return {
+        x: 930,
+        y: getRunwayY(runway) - 18
+    };
+}
+
+function getRunwayStopOffset(id) {
+    const offsets = [-5, 0, 5];
+    return offsets[id % offsets.length];
 }
 
 function getGatePosition(gate) {
@@ -626,8 +762,17 @@ function getGatePosition(gate) {
     return { x: 465, y: 365 };
 }
 
+function getGateStop(gate, id) {
+    const gatePosition = getGatePosition(gate);
+
+    return {
+        x: gatePosition.x + getSmallOffset(id),
+        y: 367
+    };
+}
+
 function getSmallOffset(id) {
-    const offsets = [-18, 0, 18, -9, 9];
+    const offsets = [-14, 0, 14, -7, 7];
     return offsets[id % offsets.length];
 }
 
@@ -650,4 +795,11 @@ function formatTime(value) {
 
     const date = new Date(value);
     return date.toLocaleTimeString();
+}
+
+function planeSvg() {
+    return "" +
+        "<svg viewBox='0 0 80 80' width='34' height='34' style='display:block;fill:currentColor' aria-hidden='true'>" +
+        "<path d='M72 40 L13 17 L22 34 L7 34 L7 46 L22 46 L13 63 Z'></path>" +
+        "</svg>";
 }
