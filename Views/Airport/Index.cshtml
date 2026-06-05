@@ -83,6 +83,10 @@
                     <span>Served</span>
                     <strong id="stat-served">-</strong>
                 </div>
+                <div class="stat-card">
+                    <span>Sim time</span>
+                    <strong id="stat-time">00:00</strong>
+                </div>
             </div>
 
             <div id="simulation-view" class="tab-content active">
@@ -174,6 +178,20 @@
                         <span class="section-kicker">Landing queue</span>
                         <h2>Waiting for runway</h2>
                         <div id="landing-queue" class="queue-list"></div>
+                    </div>
+
+                    <div class="status-panels">
+                        <div class="panel">
+                            <span class="section-kicker">Runway status</span>
+                            <h2>Runways</h2>
+                            <div id="runway-status-list" class="resource-list"></div>
+                        </div>
+
+                        <div class="panel">
+                            <span class="section-kicker">Gate status</span>
+                            <h2>Gates</h2>
+                            <div id="gate-status-list" class="resource-list"></div>
+                        </div>
                     </div>
 
                     <div class="airport-layout">

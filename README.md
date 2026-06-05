@@ -18,7 +18,10 @@ Projekt został przygotowany jako aplikacja zaliczeniowa pokazująca mechanizmy 
 - log zdarzeń,
 - tryb jasny i ciemny,
 - czyszczenie zakończonych lotów z tabeli,
-- sterowanie szybkością symulacji przed uruchomieniem.
+- sterowanie szybkością symulacji przed uruchomieniem,
+- limit aktywnych samolotów,
+- status pasów startowych i bramek,
+- licznik czasu symulacji.
 
 ## Zastosowane mechanizmy
 
@@ -103,3 +106,10 @@ Frontend otrzymuje aktualny stan przez SignalR i aktualizuje mapę, tabelę, log
 ## Uwagi
 
 Zmiana szybkości symulacji jest wykonywana przed startem symulacji. Jeżeli symulacja już działa, aplikacja zapisuje w logach informację, że przed zmianą szybkości trzeba ją zatrzymać. Dzięki temu aktywne zadania samolotów nie są przerywane w połowie trasy.
+
+
+## Ograniczenie ruchu
+
+Aplikacja ogranicza liczbę aktywnych samolotów, aby mapa pozostała czytelna. Zwykłe samoloty nie są dodawane po przekroczeniu limitu ruchu, natomiast samolot awaryjny nadal może zostać dodany ręcznie.
+
+Gate jest rezerwowany przed lądowaniem. Dzięki temu samolot nie opuszcza holding area, dopóki nie ma dla niego miejsca przy bramce. Korek tworzy się więc w powietrzu, a nie na pasie startowym.

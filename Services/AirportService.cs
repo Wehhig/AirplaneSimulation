@@ -25,9 +25,11 @@ public class AirportService
     private int _nextGate = 1;
     private int _servedPlanes;
     private int _simulationId;
+    private DateTime? _startedAt;
 
     private const int RunwayCount = 2;
     private const int GateCount = 3;
+    private const int MaxActivePlanes = 12;
 
     public AirportService(IHubContext<AirportHub> hubContext)
     {
@@ -75,7 +77,9 @@ public class AirportService
                 AtGate = _airplanes.Count(p => p.Status == "AtGate" || p.Status == "PreparingDeparture"),
                 TakingOff = takingOff,
                 Departed = _airplanes.Count(p => p.Status == "Departed"),
-                ServedPlanes = _servedPlanes
+                ServedPlanes = _servedPlanes,
+                SimulationSeconds = GetSimulationSeconds(),
+                TrafficLimit = MaxActivePlanes
             };
 
             return new AirportState
@@ -102,6 +106,7 @@ public class AirportService
 
             _isRunning = true;
             _cancellation = new CancellationTokenSource();
+            _startedAt = DateTime.Now;
             currentSimulationId = _simulationId;
             AddLog("Simulation started");
         }
@@ -124,6 +129,7 @@ public class AirportService
             _isRunning = false;
             _simulationId++;
             _cancellation.Cancel();
+            _startedAt = null;
             AddLog("Simulation stopped");
         }
 
@@ -147,6 +153,7 @@ public class AirportService
             _nextId = 1;
             _nextGate = 1;
             _servedPlanes = 0;
+            _startedAt = null;
             AddLog("Simulation reset");
         }
 
@@ -173,6 +180,13 @@ public class AirportService
             if (!_isRunning)
             {
                 AddLog("Cannot add plane because simulation is stopped");
+                SendState();
+                return;
+            }
+
+            if (!emergency && GetActivePlaneCountUnsafe() >= MaxActivePlanes)
+            {
+                AddLog("Airport traffic limit reached");
                 SendState();
                 return;
             }
@@ -327,12 +341,24 @@ public class AirportService
                 await Task.Delay(800, token);
             }
 
+            AddPlaneLog(planeId, "is waiting for free gate before landing");
+            SendState();
+
+            await _gateSemaphore.WaitAsync(token);
+            gateTaken = true;
+            gate = TakeGate();
+
+            if (!IsTaskActive(simulationId, token)) return;
+            UpdatePlane(planeId, "WaitingForRunway", null, gate);
+            AddPlaneLog(planeId, $"reserved gate {gate}");
+            SendState();
+
             await _runwaySemaphore.WaitAsync(token);
             landingRunwayTaken = true;
             landingRunway = TakeRunway();
 
             if (!IsTaskActive(simulationId, token)) return;
-            UpdatePlane(planeId, "Landing", landingRunway, null);
+            UpdatePlane(planeId, "Landing", landingRunway, gate);
 
             if (emergency)
             {
@@ -347,17 +373,8 @@ public class AirportService
 
             await DelayRandom(9000, 14000, token);
 
-            if (!IsTaskActive(simulationId, token)) return;
-            UpdatePlane(planeId, "WaitingForGate", landingRunway, null);
-            AddPlaneLog(planeId, "left runway and is waiting for free gate");
-            SendState();
-
             ReleaseRunway(landingRunway);
             landingRunwayTaken = false;
-
-            await _gateSemaphore.WaitAsync(token);
-            gateTaken = true;
-            gate = TakeGate();
 
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "TaxiingToGate", null, gate);
@@ -440,6 +457,11 @@ public class AirportService
 
             SendState();
         }
+    }
+
+    private int GetActivePlaneCountUnsafe()
+    {
+        return _airplanes.Count(p => p.Status != "Departed" && p.Status != "Cancelled");
     }
 
     private bool IsTaskActive(int simulationId, CancellationToken token)
@@ -633,6 +655,16 @@ public class AirportService
 
             return value;
         }
+    }
+
+    private int GetSimulationSeconds()
+    {
+        if (!_isRunning || _startedAt == null)
+        {
+            return 0;
+        }
+
+        return (int)(DateTime.Now - _startedAt.Value).TotalSeconds;
     }
 
     private string GetAirportLoad(int activePlanes, int waiting, int landing, int takingOff)

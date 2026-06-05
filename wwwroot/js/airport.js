@@ -124,6 +124,7 @@ function renderState(state) {
     renderPlanesTable(state.airplanes);
     renderLogs(state.logs);
     renderQueue(state.airplanes);
+    renderResourceStatus(state.airplanes);
     preparePlaneElements(state.airplanes);
 }
 
@@ -137,6 +138,7 @@ function renderStats(stats) {
     document.getElementById("stat-load").textContent = stats.airportLoad;
     document.getElementById("stat-emergency").textContent = stats.emergencyPlanes;
     document.getElementById("stat-served").textContent = stats.servedPlanes;
+    document.getElementById("stat-time").textContent = formatDuration(stats.simulationSeconds);
 
     document.getElementById("state-active").textContent = stats.activePlanes;
     document.getElementById("state-gate").textContent = stats.atGate;
@@ -246,6 +248,87 @@ function renderQueue(planes) {
             "<span>waiting for runway</span>";
 
         queueBox.appendChild(item);
+    }
+}
+
+
+function renderResourceStatus(planes) {
+    renderRunwayStatus(planes);
+    renderGateStatus(planes);
+}
+
+function renderRunwayStatus(planes) {
+    const box = document.getElementById("runway-status-list");
+
+    if (box === null) {
+        return;
+    }
+
+    box.innerHTML = "";
+
+    for (let runway = 1; runway <= 2; runway++) {
+        const plane = planes.find(function (item) {
+            return item.runwayNumber === runway && (item.status === "Landing" || item.status === "TakingOff");
+        });
+
+        const item = document.createElement("div");
+        item.className = "resource-item";
+
+        if (plane) {
+            item.innerHTML =
+                "<strong>Runway " + runway + "</strong>" +
+                "<span>" + plane.flightNumber + " / " + plane.status + "</span>";
+            item.classList.add("resource-busy");
+        } else {
+            item.innerHTML =
+                "<strong>Runway " + runway + "</strong>" +
+                "<span>Free</span>";
+            item.classList.add("resource-free");
+        }
+
+        box.appendChild(item);
+    }
+}
+
+function renderGateStatus(planes) {
+    const box = document.getElementById("gate-status-list");
+
+    if (box === null) {
+        return;
+    }
+
+    box.innerHTML = "";
+
+    for (let gate = 1; gate <= 3; gate++) {
+        const occupied = planes.find(function (item) {
+            return item.gateNumber === gate && (item.status === "AtGate" || item.status === "PreparingDeparture");
+        });
+
+        const reserved = planes.find(function (item) {
+            return item.gateNumber === gate && item.status !== "Departed" && item.status !== "Cancelled";
+        });
+
+        const item = document.createElement("div");
+        item.className = "resource-item";
+
+        if (occupied) {
+            item.innerHTML =
+                "<strong>Gate " + gate + "</strong>" +
+                "<span>" + occupied.flightNumber + " / Occupied</span>";
+            item.classList.add("resource-busy");
+        } else if (reserved) {
+            item.innerHTML =
+                "<strong>Gate " + gate + "</strong>" +
+                "<span>" + reserved.flightNumber + " / Reserved</span>";
+            item.classList.add("resource-reserved");
+        } else {
+            item.innerHTML =
+                "<strong>Gate " + gate + "</strong>" +
+                "<span>Free</span>";
+            item.classList.add("resource-free");
+        }
+
+        box.appendChild(item);
     }
 }
 
@@ -385,12 +468,8 @@ function getInitialPoint(plane) {
         return getOrbitPoint(plane.id, now, 32000, 0);
     }
 
-    if (plane.status === "WaitingForGate") {
-        return getGateWaitingSpot(plane.runwayNumber, plane.id);
-    }
-
     if (plane.status === "TaxiingToGate") {
-        return getGateWaitingSpot(plane.runwayNumber, plane.id);
+        return getP3(plane.runwayNumber, plane.id);
     }
 
     if (plane.status === "AtGate" || plane.status === "PreparingDeparture" || plane.status === "TakingOff") {
@@ -407,10 +486,6 @@ function getInitialPoint(plane) {
 function createRouteForStatus(plane, visual) {
     if (plane.status === "Landing") {
         return createLandingRoute(plane, visual);
-    }
-
-    if (plane.status === "WaitingForGate") {
-        return createWaitingForGateRoute(plane, visual);
     }
 
     if (plane.status === "TaxiingToGate") {
@@ -447,15 +522,6 @@ function getPlanePoint(plane, visual) {
     if (plane.status === "Landing") {
         if (!visual.route) {
             visual.route = createLandingRoute(plane, visual);
-            visual.started = Date.now();
-        }
-
-        return getRoutePoint(visual.route, time);
-    }
-
-    if (plane.status === "WaitingForGate") {
-        if (!visual.route) {
-            visual.route = createWaitingForGateRoute(plane, visual);
             visual.started = Date.now();
         }
 
@@ -544,24 +610,16 @@ function createLandingRoute(plane, visual) {
     };
 }
 
-function createWaitingForGateRoute(plane, visual) {
-    return route([
-        point(visual.x, visual.y),
-        getGateWaitingSpot(plane.runwayNumber, plane.id)
-    ], 2600);
-}
-
 function createTaxiToGateRoute(plane, visual) {
     const gate = getGatePosition(plane.gateNumber);
     const runwayY = getNearestRunwayY(visual.y);
     const start = point(visual.x, visual.y);
     const gateTaxiX = gate.x;
-    const taxiY = 330;
 
     return route([
         start,
-        point(start.x, taxiY),
-        point(gateTaxiX, taxiY),
+        point(gateTaxiX, runwayY),
+        point(gateTaxiX, 330),
         point(gateTaxiX, 350),
         getGateStop(plane.gateNumber, plane.id)
     ], 8500);
@@ -821,16 +879,6 @@ function getRunwayStopOffset(id) {
     return offsets[id % offsets.length];
 }
 
-function getGateWaitingSpot(runway, id) {
-    const baseY = getRunwayY(runway) + 45;
-    const offsets = [-10, 0, 10, -18, 18];
-
-    return {
-        x: 270 + offsets[id % offsets.length],
-        y: baseY
-    };
-}
-
 function getGatePosition(gate) {
     if (gate === 1) {
         return { x: 335, y: 365 };
@@ -889,4 +937,16 @@ function planeSvg() {
         "<path d='M31 43 L48 31 L44 47 Z'></path>" +
         "<path d='M31 57 L48 69 L44 53 Z'></path>" +
         "</svg>";
+}
+
+
+function formatDuration(seconds) {
+    if (seconds === null || seconds === undefined) {
+        return "00:00";
+    }
+
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+
+    return String(minutes).padStart(2, "0") + ":" + String(rest).padStart(2, "0");
 }

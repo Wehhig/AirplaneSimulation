@@ -19,4 +19,6 @@ public class AirportStats
     public int TakingOff { get; set; }
     public int Departed { get; set; }
     public int ServedPlanes { get; set; }
+    public int SimulationSeconds { get; set; }
+    public int TrafficLimit { get; set; }
 }
