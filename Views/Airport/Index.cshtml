@@ -24,6 +24,7 @@
                 <button onclick="stopSimulation()">Stop</button>
                 <button onclick="resetSimulation()">Reset</button>
                 <button onclick="addPlane()">Add Plane</button>
+                <button class="emergency-control" onclick="addEmergencyPlane()">Emergency Plane</button>
                 <button onclick="clearDeparted()">Clear Departed</button>
             </div>
 
@@ -39,6 +40,11 @@
             <div class="control-block">
                 <span>Auto mode</span>
                 <button id="auto-mode-button" class="wide-control" onclick="toggleAutoMode()">-</button>
+            </div>
+
+            <div class="control-block">
+                <span>Theme</span>
+                <button id="theme-button" class="wide-control" onclick="toggleTheme()">Dark mode</button>
             </div>
 
             <div class="tower-note">
@@ -68,6 +74,10 @@
                 <div class="stat-card">
                     <span>Load</span>
                     <strong id="stat-load">-</strong>
+                </div>
+                <div class="stat-card">
+                    <span>Emergency</span>
+                    <strong id="stat-emergency">-</strong>
                 </div>
                 <div class="stat-card">
                     <span>Served</span>

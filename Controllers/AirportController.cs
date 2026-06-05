@@ -52,6 +52,13 @@ public class AirportController : Controller
     }
 
     [HttpPost]
+    public IActionResult AddEmergencyPlane()
+    {
+        _airportService.AddEmergencyPlane();
+        return Json(_airportService.GetState());
+    }
+
+    [HttpPost]
     public IActionResult SetSpeed(string speed)
     {
         _airportService.SetSpeed(speed);

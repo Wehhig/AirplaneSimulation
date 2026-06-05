@@ -42,6 +42,7 @@ public class AirportService
                     Id = p.Id,
                     FlightNumber = p.FlightNumber,
                     Status = p.Status,
+                    IsEmergency = p.IsEmergency,
                     RunwayNumber = p.RunwayNumber,
                     GateNumber = p.GateNumber,
                     CreatedAt = p.CreatedAt,
@@ -65,6 +66,7 @@ public class AirportService
                 BusyRunways = RunwayCount - _runwaySemaphore.CurrentCount,
                 TotalPlanes = _airplanes.Count,
                 ActivePlanes = activePlanes,
+                EmergencyPlanes = _airplanes.Count(p => p.IsEmergency && p.Status != "Departed" && p.Status != "Cancelled"),
                 InAir = _airplanes.Count(p => p.Status == "Flying"),
                 Waiting = waiting,
                 Landing = landing,
@@ -149,6 +151,16 @@ public class AirportService
 
     public void AddPlane()
     {
+        AddPlaneInternal(false);
+    }
+
+    public void AddEmergencyPlane()
+    {
+        AddPlaneInternal(true);
+    }
+
+    private void AddPlaneInternal(bool emergency)
+    {
         int currentSimulationId;
         CancellationToken token;
 
@@ -165,7 +177,7 @@ public class AirportService
             token = _cancellation.Token;
         }
 
-        var plane = CreatePlane();
+        var plane = CreatePlane(emergency);
 
         SendState();
         Task.Run(() => ProcessPlane(plane.Id, currentSimulationId, token));
@@ -177,6 +189,13 @@ public class AirportService
         {
             if (speed != "Slow" && speed != "Normal" && speed != "Fast")
             {
+                return;
+            }
+
+            if (_isRunning)
+            {
+                AddLog("Stop simulation before changing speed");
+                SendState();
                 return;
             }
 
@@ -240,7 +259,7 @@ public class AirportService
         }
     }
 
-    private Airplane CreatePlane()
+    private Airplane CreatePlane(bool emergency)
     {
         Airplane plane;
 
@@ -249,15 +268,24 @@ public class AirportService
             plane = new Airplane
             {
                 Id = _nextId,
-                FlightNumber = CreateFlightNumber(_nextId),
+                FlightNumber = CreateFlightNumber(_nextId, emergency),
                 Status = "Flying",
+                IsEmergency = emergency,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
 
             _nextId++;
             _airplanes.Add(plane);
-            AddLog($"{plane.FlightNumber} appeared in the air");
+
+            if (emergency)
+            {
+                AddLog($"{plane.FlightNumber} declared emergency");
+            }
+            else
+            {
+                AddLog($"{plane.FlightNumber} appeared in the air");
+            }
         }
 
         return plane;
@@ -272,12 +300,26 @@ public class AirportService
 
         try
         {
-            await DelayRandom(5000, 9000, token);
+            var emergency = IsPlaneEmergency(planeId);
+
+            if (emergency)
+            {
+                await DelayRandom(1200, 2500, token);
+            }
+            else
+            {
+                await DelayRandom(5000, 9000, token);
+            }
 
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "WaitingForRunway", null, null);
             AddPlaneLog(planeId, "is waiting for runway");
             SendState();
+
+            while (ShouldHoldForEmergency(planeId, emergency) && IsTaskActive(simulationId, token))
+            {
+                await Task.Delay(800, token);
+            }
 
             await _runwaySemaphore.WaitAsync(token);
             landingRunwayTaken = true;
@@ -285,7 +327,16 @@ public class AirportService
 
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "Landing", landingRunway, null);
-            AddPlaneLog(planeId, $"got runway {landingRunway} and is landing");
+
+            if (emergency)
+            {
+                AddPlaneLog(planeId, $"got priority runway {landingRunway} and is landing");
+            }
+            else
+            {
+                AddPlaneLog(planeId, $"got runway {landingRunway} and is landing");
+            }
+
             SendState();
 
             await DelayRandom(9000, 14000, token);
@@ -314,6 +365,11 @@ public class AirportService
             SendState();
 
             await DelayRandom(7000, 11000, token);
+
+            while (ShouldHoldForEmergency(planeId, emergency) && IsTaskActive(simulationId, token))
+            {
+                await Task.Delay(800, token);
+            }
 
             await _runwaySemaphore.WaitAsync(token);
             takeoffRunwayTaken = true;
@@ -374,6 +430,31 @@ public class AirportService
         lock (_lock)
         {
             return _autoMode;
+        }
+    }
+
+    private bool IsPlaneEmergency(int planeId)
+    {
+        lock (_lock)
+        {
+            var plane = _airplanes.FirstOrDefault(p => p.Id == planeId);
+            return plane != null && plane.IsEmergency;
+        }
+    }
+
+    private bool ShouldHoldForEmergency(int planeId, bool emergency)
+    {
+        lock (_lock)
+        {
+            if (emergency)
+            {
+                return false;
+            }
+
+            return _airplanes.Any(p =>
+                p.Id != planeId &&
+                p.IsEmergency &&
+                (p.Status == "Flying" || p.Status == "WaitingForRunway" || p.Status == "Landing"));
         }
     }
 
@@ -452,8 +533,13 @@ public class AirportService
         }
     }
 
-    private string CreateFlightNumber(int id)
+    private string CreateFlightNumber(int id, bool emergency)
     {
+        if (emergency)
+        {
+            return $"EMG{100 + id}";
+        }
+
         var prefixes = new[] { "LOT", "WZZ", "RYR", "DLH", "AFR" };
         var prefix = prefixes[GetRandomNumber(0, prefixes.Length)];
         return $"{prefix}{100 + id}";
@@ -495,6 +581,11 @@ public class AirportService
         if (!_isRunning)
         {
             return "Idle";
+        }
+
+        if (_airplanes.Any(p => p.IsEmergency && p.Status != "Departed" && p.Status != "Cancelled"))
+        {
+            return "Emergency";
         }
 
         if (waiting >= 3 || activePlanes >= 8)

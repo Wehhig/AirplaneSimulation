@@ -11,6 +11,7 @@ public class AirportStats
     public int BusyRunways { get; set; }
     public int TotalPlanes { get; set; }
     public int ActivePlanes { get; set; }
+    public int EmergencyPlanes { get; set; }
     public int InAir { get; set; }
     public int Waiting { get; set; }
     public int Landing { get; set; }

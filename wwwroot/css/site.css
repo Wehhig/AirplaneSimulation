@@ -554,3 +554,144 @@ th {
         font-size: 9px;
     }
 }
+
+.emergency-control {
+    background: #ff7043 !important;
+}
+
+.emergency-mark {
+    display: inline-block;
+    margin-left: 8px;
+    border: 2px solid #161616;
+    background: #ff7043;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-family: Consolas, monospace;
+}
+
+.emergency-row {
+    background: rgba(255, 112, 67, 0.12);
+}
+
+.status-badge.emergency-row {
+    background: #ff7043;
+}
+
+.plane-icon {
+    width: 34px;
+    height: 34px;
+    display: block;
+    fill: currentColor;
+}
+
+.emergency-plane .plane-symbol {
+    color: #ff4d2d !important;
+}
+
+body.dark-mode {
+    background: #101418;
+    color: #e8efe8;
+}
+
+body.dark-mode .tower-panel,
+body.dark-mode .panel,
+body.dark-mode .stat-card {
+    background: #151b20;
+    border-color: #6ee787;
+}
+
+body.dark-mode .tower-mark,
+body.dark-mode .tab-button.active {
+    background: #6ee787;
+    color: #101418;
+    border-color: #6ee787;
+}
+
+body.dark-mode .tower-title p,
+body.dark-mode .stat-card span,
+body.dark-mode .section-kicker,
+body.dark-mode .state-list span,
+body.dark-mode .tower-note span {
+    color: #9baaa0;
+}
+
+body.dark-mode .tab-button,
+body.dark-mode .airport-buttons button,
+body.dark-mode .wide-control,
+body.dark-mode .speed-buttons button {
+    background: #101418;
+    color: #e8efe8;
+    border-color: #6ee787;
+    box-shadow: 4px 4px 0 #6ee787;
+}
+
+body.dark-mode .tab-button:hover,
+body.dark-mode .airport-buttons button:hover,
+body.dark-mode .wide-control:hover,
+body.dark-mode .speed-buttons button:hover,
+body.dark-mode .active-control {
+    background: #6ee787 !important;
+    color: #101418;
+}
+
+body.dark-mode .airport-map,
+body.dark-mode .map-bg {
+    background: #101418;
+    fill: #101418;
+}
+
+body.dark-mode .holding-line,
+body.dark-mode .route-line,
+body.dark-mode .taxi-line {
+    stroke: #6ee787;
+    opacity: 0.7;
+}
+
+body.dark-mode .runway {
+    fill: #060808;
+}
+
+body.dark-mode .runway-center {
+    stroke: #6ee787;
+}
+
+body.dark-mode .gate {
+    fill: #151b20;
+    stroke: #6ee787;
+}
+
+body.dark-mode .terminal {
+    fill: #1b252b;
+    stroke: #6ee787;
+}
+
+body.dark-mode .map-text,
+body.dark-mode .map-text-small,
+body.dark-mode .terminal-text {
+    fill: #e8efe8;
+}
+
+body.dark-mode .plane-label {
+    background: #101418;
+    color: #e8efe8;
+    border-color: #6ee787;
+}
+
+body.dark-mode table,
+body.dark-mode th,
+body.dark-mode td,
+body.dark-mode .state-list,
+body.dark-mode .state-list div,
+body.dark-mode .event-log {
+    border-color: #6ee787;
+}
+
+body.dark-mode .event-log div {
+    border-bottom-color: #2c3a31;
+}
+
+body.dark-mode .queue-item,
+body.dark-mode .queue-empty,
+body.dark-mode .status-pill {
+    border-color: #6ee787;
+}

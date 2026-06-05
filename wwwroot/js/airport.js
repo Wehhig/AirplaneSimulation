@@ -15,6 +15,7 @@ connection.start().then(function () {
     loadState();
 });
 
+initTheme();
 requestAnimationFrame(animatePlanes);
 
 async function startSimulation() {
@@ -38,6 +39,11 @@ async function addPlane() {
     renderState(state);
 }
 
+async function addEmergencyPlane() {
+    const state = await sendPost("/Airport/AddEmergencyPlane");
+    renderState(state);
+}
+
 async function setSpeed(speed) {
     const state = await sendPost("/Airport/SetSpeed?speed=" + speed);
     renderState(state);
@@ -51,6 +57,44 @@ async function toggleAutoMode() {
 async function clearDeparted() {
     const state = await sendPost("/Airport/ClearDeparted");
     renderState(state);
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem("airportTheme");
+
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark-mode");
+    }
+
+    updateThemeButton();
+}
+
+function toggleTheme() {
+    document.body.classList.toggle("dark-mode");
+
+    if (document.body.classList.contains("dark-mode")) {
+        localStorage.setItem("airportTheme", "dark");
+    } else {
+        localStorage.setItem("airportTheme", "light");
+    }
+
+    updateThemeButton();
+}
+
+function updateThemeButton() {
+    const button = document.getElementById("theme-button");
+
+    if (button === null) {
+        return;
+    }
+
+    if (document.body.classList.contains("dark-mode")) {
+        button.textContent = "Light mode";
+        button.classList.add("active-control");
+    } else {
+        button.textContent = "Dark mode";
+        button.classList.remove("active-control");
+    }
 }
 
 async function sendPost(url) {
@@ -91,6 +135,7 @@ function renderStats(stats) {
     document.getElementById("stat-air").textContent = stats.inAir;
     document.getElementById("stat-waiting").textContent = stats.waiting;
     document.getElementById("stat-load").textContent = stats.airportLoad;
+    document.getElementById("stat-emergency").textContent = stats.emergencyPlanes;
     document.getElementById("stat-served").textContent = stats.servedPlanes;
 
     document.getElementById("state-active").textContent = stats.activePlanes;
@@ -156,9 +201,14 @@ function renderPlanesTable(planes) {
     for (const plane of planes) {
         const row = document.createElement("tr");
 
+        const emergencyClass = plane.isEmergency ? " emergency-row" : "";
+        const emergencyMark = plane.isEmergency ? " <span class='emergency-mark'>EMG</span>" : "";
+
+        row.className = emergencyClass;
+
         row.innerHTML =
-            "<td>" + plane.flightNumber + "</td>" +
-            "<td><span class='status-badge " + plane.status + "'>" + plane.status + "</span></td>" +
+            "<td>" + plane.flightNumber + emergencyMark + "</td>" +
+            "<td><span class='status-badge " + plane.status + emergencyClass + "'>" + plane.status + "</span></td>" +
             "<td>" + valueOrDash(plane.runwayNumber) + "</td>" +
             "<td>" + valueOrDash(plane.gateNumber) + "</td>" +
             "<td>" + formatTime(plane.updatedAt) + "</td>";
@@ -322,7 +372,7 @@ function movePlane(element, plane) {
     visual.y = pointValue.y;
     visual.rotation = pointValue.rotation;
 
-    element.className = "plane status-" + plane.status;
+    element.className = "plane status-" + plane.status + (plane.isEmergency ? " emergency-plane" : "");
     element.style.left = percent(pointValue.x, 900);
     element.style.top = percent(pointValue.y, 480);
     symbol.style.transform = "rotate(" + pointValue.rotation + "deg)";
@@ -799,7 +849,9 @@ function formatTime(value) {
 
 function planeSvg() {
     return "" +
-        "<svg viewBox='0 0 80 80' width='34' height='34' style='display:block;fill:currentColor' aria-hidden='true'>" +
-        "<path d='M72 40 L13 17 L22 34 L7 34 L7 46 L22 46 L13 63 Z'></path>" +
+        "<svg class='plane-icon' viewBox='0 0 100 100' aria-hidden='true'>" +
+        "<path d='M90 50 L12 20 L24 43 L6 43 L6 57 L24 57 L12 80 Z'></path>" +
+        "<path d='M31 43 L48 31 L44 47 Z'></path>" +
+        "<path d='M31 57 L48 69 L44 53 Z'></path>" +
         "</svg>";
 }
