@@ -13,7 +13,9 @@ public class AirportService
     private List<Airplane> _airplanes = new();
     private List<string> _logs = new();
     private SemaphoreSlim _runwaySemaphore = new(2, 2);
+    private SemaphoreSlim _gateSemaphore = new(3, 3);
     private bool[] _runwayBusy = new bool[2];
+    private bool[] _gateBusy = new bool[3];
     private CancellationTokenSource _cancellation = new();
 
     private bool _isRunning;
@@ -139,7 +141,9 @@ public class AirportService
             _airplanes = new List<Airplane>();
             _logs = new List<string>();
             _runwaySemaphore = new SemaphoreSlim(RunwayCount, RunwayCount);
+            _gateSemaphore = new SemaphoreSlim(GateCount, GateCount);
             _runwayBusy = new bool[RunwayCount];
+            _gateBusy = new bool[GateCount];
             _nextId = 1;
             _nextGate = 1;
             _servedPlanes = 0;
@@ -295,8 +299,10 @@ public class AirportService
     {
         int landingRunway = 0;
         int takeoffRunway = 0;
+        int gate = 0;
         bool landingRunwayTaken = false;
         bool takeoffRunwayTaken = false;
+        bool gateTaken = false;
 
         try
         {
@@ -341,11 +347,19 @@ public class AirportService
 
             await DelayRandom(9000, 14000, token);
 
+            if (!IsTaskActive(simulationId, token)) return;
+            UpdatePlane(planeId, "WaitingForGate", landingRunway, null);
+            AddPlaneLog(planeId, "left runway and is waiting for free gate");
+            SendState();
+
             ReleaseRunway(landingRunway);
             landingRunwayTaken = false;
 
+            await _gateSemaphore.WaitAsync(token);
+            gateTaken = true;
+            gate = TakeGate();
+
             if (!IsTaskActive(simulationId, token)) return;
-            var gate = TakeGate();
             UpdatePlane(planeId, "TaxiingToGate", null, gate);
             AddPlaneLog(planeId, $"is taxiing to gate {gate}");
             SendState();
@@ -385,6 +399,12 @@ public class AirportService
             ReleaseRunway(takeoffRunway);
             takeoffRunwayTaken = false;
 
+            if (gateTaken)
+            {
+                ReleaseGate(gate);
+                gateTaken = false;
+            }
+
             if (!IsTaskActive(simulationId, token)) return;
             UpdatePlane(planeId, "Departed", null, null);
             AddPlaneLog(planeId, "departed");
@@ -411,6 +431,11 @@ public class AirportService
             if (takeoffRunwayTaken)
             {
                 ReleaseRunway(takeoffRunway);
+            }
+
+            if (gateTaken)
+            {
+                ReleaseGate(gate);
             }
 
             SendState();
@@ -521,15 +546,49 @@ public class AirportService
     {
         lock (_lock)
         {
-            var gate = _nextGate;
-            _nextGate++;
-
-            if (_nextGate > GateCount)
+            for (int offset = 0; offset < GateCount; offset++)
             {
-                _nextGate = 1;
+                var index = (_nextGate - 1 + offset) % GateCount;
+
+                if (!_gateBusy[index])
+                {
+                    _gateBusy[index] = true;
+                    _nextGate = index + 2;
+
+                    if (_nextGate > GateCount)
+                    {
+                        _nextGate = 1;
+                    }
+
+                    return index + 1;
+                }
             }
 
-            return gate;
+            return 1;
+        }
+    }
+
+    private void ReleaseGate(int gate)
+    {
+        if (gate <= 0)
+        {
+            return;
+        }
+
+        lock (_lock)
+        {
+            if (gate <= _gateBusy.Length)
+            {
+                _gateBusy[gate - 1] = false;
+            }
+        }
+
+        try
+        {
+            _gateSemaphore.Release();
+        }
+        catch
+        {
         }
     }
 

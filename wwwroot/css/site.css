@@ -695,3 +695,213 @@ body.dark-mode .queue-empty,
 body.dark-mode .status-pill {
     border-color: #6ee787;
 }
+
+
+body.dark-mode .status-pill {
+    color: #e8efe8;
+    border-color: #6ee787;
+}
+
+body.dark-mode .status-pill.normal {
+    background: #12391f;
+    color: #bbf7d0;
+    border-color: #22c55e;
+}
+
+body.dark-mode .status-pill.busy {
+    background: #f59e0b;
+    color: #111827;
+    border-color: #fbbf24;
+}
+
+body.dark-mode .status-pill.stopped {
+    background: #374151;
+    color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+body.dark-mode table,
+body.dark-mode thead,
+body.dark-mode tbody,
+body.dark-mode tr,
+body.dark-mode td,
+body.dark-mode th {
+    background: #111820;
+    color: #e8efe8;
+}
+
+body.dark-mode th {
+    color: #a7f3d0;
+}
+
+body.dark-mode tr.emergency-row,
+body.dark-mode tr.emergency-row td {
+    background: #2a1715;
+}
+
+body.dark-mode .status-badge {
+    color: #e8efe8;
+    border-color: #6ee787;
+}
+
+body.dark-mode .status-badge.Flying {
+    background: #17324d;
+    color: #d8ecff;
+    border-color: #60a5fa;
+}
+
+body.dark-mode .status-badge.WaitingForRunway {
+    background: #5c4611;
+    color: #fde68a;
+    border-color: #fbbf24;
+}
+
+body.dark-mode .status-badge.Landing,
+body.dark-mode .status-badge.TakingOff {
+    background: #572620;
+    color: #fed7aa;
+    border-color: #fb923c;
+}
+
+body.dark-mode .status-badge.AtGate,
+body.dark-mode .status-badge.PreparingDeparture,
+body.dark-mode .status-badge.TaxiingToGate {
+    background: #12391f;
+    color: #bbf7d0;
+    border-color: #22c55e;
+}
+
+body.dark-mode .status-badge.Departed {
+    background: #e8efe8;
+    color: #101418;
+    border-color: #e8efe8;
+}
+
+body.dark-mode .status-badge.emergency-row {
+    background: #7f1d1d;
+    color: #ffe4e6;
+    border-color: #fb7185;
+}
+
+body.dark-mode .emergency-mark {
+    background: #7f1d1d;
+    color: #ffe4e6;
+    border-color: #fb7185;
+}
+
+body.dark-mode .queue-item {
+    background: #5c4611;
+    color: #fde68a;
+    border-color: #fbbf24;
+}
+
+body.dark-mode .queue-empty {
+    background: #1f2937;
+    color: #d1d5db;
+    border-color: #6b7280;
+}
+
+body.dark-mode .emergency-control {
+    background: #7f1d1d !important;
+    color: #ffe4e6 !important;
+    border-color: #fb7185 !important;
+}
+
+body.dark-mode .emergency-control:hover {
+    background: #fb7185 !important;
+    color: #111827 !important;
+}
+
+
+.status-badge.WaitingForGate {
+    background: #e7e0c6;
+    color: #161616;
+}
+
+body.dark-mode .status-badge.WaitingForGate {
+    background: #32413a;
+    color: #e8efe8;
+    border-color: #6ee787;
+}
+
+body.dark-mode .status-pill.normal {
+    background: #1f3b2a;
+    color: #9ff5b2;
+    border-color: #6ee787;
+}
+
+body.dark-mode .status-pill.busy {
+    background: #533b11;
+    color: #ffd166;
+    border-color: #ffd166;
+}
+
+body.dark-mode .status-pill.stopped {
+    background: #2c3135;
+    color: #d7dde2;
+    border-color: #8b949e;
+}
+
+body.dark-mode .stat-card strong,
+body.dark-mode .panel h2,
+body.dark-mode .tower-title h1,
+body.dark-mode .state-list strong {
+    color: #f0fff4;
+}
+
+body.dark-mode .status-badge.Flying {
+    background: #1b3a56;
+    color: #dbeafe;
+    border-color: #60a5fa;
+}
+
+body.dark-mode .status-badge.WaitingForRunway {
+    background: #4b3d14;
+    color: #ffe08a;
+    border-color: #ffd166;
+}
+
+body.dark-mode .status-badge.Landing,
+body.dark-mode .status-badge.TakingOff {
+    background: #4b1f1b;
+    color: #ffd8c7;
+    border-color: #ff9b73;
+}
+
+body.dark-mode .status-badge.AtGate,
+body.dark-mode .status-badge.PreparingDeparture,
+body.dark-mode .status-badge.TaxiingToGate {
+    background: #173b25;
+    color: #c8facc;
+    border-color: #6ee787;
+}
+
+body.dark-mode .status-badge.Departed {
+    background: #e8efe8;
+    color: #101418;
+    border-color: #e8efe8;
+}
+
+body.dark-mode .queue-item {
+    background: #4b3d14;
+    color: #ffe08a;
+    border-color: #ffd166;
+}
+
+body.dark-mode .queue-empty {
+    background: #22292f;
+    color: #d7dde2;
+    border-color: #8b949e;
+}
+
+body.dark-mode .emergency-control,
+body.dark-mode .emergency-mark,
+body.dark-mode .status-badge.emergency-row {
+    background: #ff7043 !important;
+    color: #101418 !important;
+    border-color: #ffb199 !important;
+}
+
+body.dark-mode .emergency-row {
+    background: rgba(255, 112, 67, 0.22) !important;
+}

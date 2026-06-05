@@ -385,8 +385,12 @@ function getInitialPoint(plane) {
         return getOrbitPoint(plane.id, now, 32000, 0);
     }
 
+    if (plane.status === "WaitingForGate") {
+        return getGateWaitingSpot(plane.runwayNumber, plane.id);
+    }
+
     if (plane.status === "TaxiingToGate") {
-        return getP3(plane.runwayNumber, plane.id);
+        return getGateWaitingSpot(plane.runwayNumber, plane.id);
     }
 
     if (plane.status === "AtGate" || plane.status === "PreparingDeparture" || plane.status === "TakingOff") {
@@ -403,6 +407,10 @@ function getInitialPoint(plane) {
 function createRouteForStatus(plane, visual) {
     if (plane.status === "Landing") {
         return createLandingRoute(plane, visual);
+    }
+
+    if (plane.status === "WaitingForGate") {
+        return createWaitingForGateRoute(plane, visual);
     }
 
     if (plane.status === "TaxiingToGate") {
@@ -439,6 +447,15 @@ function getPlanePoint(plane, visual) {
     if (plane.status === "Landing") {
         if (!visual.route) {
             visual.route = createLandingRoute(plane, visual);
+            visual.started = Date.now();
+        }
+
+        return getRoutePoint(visual.route, time);
+    }
+
+    if (plane.status === "WaitingForGate") {
+        if (!visual.route) {
+            visual.route = createWaitingForGateRoute(plane, visual);
             visual.started = Date.now();
         }
 
@@ -527,16 +544,24 @@ function createLandingRoute(plane, visual) {
     };
 }
 
+function createWaitingForGateRoute(plane, visual) {
+    return route([
+        point(visual.x, visual.y),
+        getGateWaitingSpot(plane.runwayNumber, plane.id)
+    ], 2600);
+}
+
 function createTaxiToGateRoute(plane, visual) {
     const gate = getGatePosition(plane.gateNumber);
     const runwayY = getNearestRunwayY(visual.y);
     const start = point(visual.x, visual.y);
     const gateTaxiX = gate.x;
+    const taxiY = 330;
 
     return route([
         start,
-        point(gateTaxiX, runwayY),
-        point(gateTaxiX, 330),
+        point(start.x, taxiY),
+        point(gateTaxiX, taxiY),
         point(gateTaxiX, 350),
         getGateStop(plane.gateNumber, plane.id)
     ], 8500);
@@ -794,6 +819,16 @@ function getP6(runway) {
 function getRunwayStopOffset(id) {
     const offsets = [-5, 0, 5];
     return offsets[id % offsets.length];
+}
+
+function getGateWaitingSpot(runway, id) {
+    const baseY = getRunwayY(runway) + 45;
+    const offsets = [-10, 0, 10, -18, 18];
+
+    return {
+        x: 270 + offsets[id % offsets.length],
+        y: baseY
+    };
 }
 
 function getGatePosition(gate) {
